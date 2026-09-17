@@ -116,6 +116,9 @@
   }
   .btn-primary { background: var(--primary); color: var(--surface); }
   .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: var(--surface); color: var(--primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--primary); }
+  .hero-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
   /* Features */
   .features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -152,6 +155,8 @@
   .cta p { color: #F3E6D8; margin: 12px auto 24px; max-width: 440px; line-height: 1.5; }
   .cta .btn-primary { background: var(--surface); color: var(--primary-dark); }
   .cta .btn-primary:hover { background: #F3E6D8; }
+  .cta .btn-secondary { background: transparent; color: var(--surface); border-color: rgba(255, 255, 255, 0.5); }
+  .cta .btn-secondary:hover { border-color: var(--surface); }
 
   footer {
     text-align: center;
@@ -182,6 +187,7 @@
           <li><a href="#funcionalidades">Funcionalidades</a></li>
           <li><a href="#sobre">Sobre</a></li>
           <li><a href="#download">Download</a></li>
+          <li><a href="../webapp/index.html">Usar no navegador</a></li>
         </ul>
       </nav>
     </div>
@@ -197,7 +203,10 @@
         <span class="dot b"></span>
         <span class="dot p"></span>
       </div>
-      <a class="btn btn-primary" href="../landing/index.html">Baixar o app</a>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="../landing/index.html">Baixar o app</a>
+        <a class="btn btn-secondary" href="../webapp/index.html">Usar no navegador</a>
+      </div>
     </div>
   </section>
 
@@ -257,8 +266,11 @@
   <section class="cta" id="download">
     <div class="wrap">
       <h2>Pronto para começar?</h2>
-      <p>Baixe o app e leve a Bíblia com você para onde for.</p>
-      <a class="btn btn-primary" href="../landing/index.html">Ir para a página de download</a>
+      <p>Baixe o app para o celular ou use direto no navegador, sem instalar nada.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="../landing/index.html">Ir para a página de download</a>
+        <a class="btn btn-secondary" href="../webapp/index.html">Usar no navegador</a>
+      </div>
     </div>
   </section>
 
