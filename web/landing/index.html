@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App do Pentecostal — Baixe o app</title>
+<meta name="description" content="Baixe o App do Pentecostal: leia a Bíblia, destaque versículos e guarde suas anotações no celular.">
+<link rel="icon" href="../assets/favicon.png">
+<style>
+  :root {
+    --bg: #FAF6F0;
+    --surface: #FFFFFF;
+    --border: #E7DFD3;
+    --text: #2B2320;
+    --text-secondary: #6F6459;
+    --primary: #7A4B2A;
+    --primary-dark: #5C371D;
+    --accent: #B4772C;
+    --yellow: #F5D76E;
+    --green: #A9D6A0;
+    --blue: #A9C7E8;
+    --pink: #EBB6C7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  h1, h2 { font-family: Georgia, 'Times New Roman', serif; margin: 0; }
+  a { color: inherit; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+  .hero {
+    padding: 56px 0 40px;
+    text-align: center;
+  }
+  .icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(43, 35, 32, 0.15);
+    margin-bottom: 20px;
+  }
+  .hero h1 { font-size: 30px; color: var(--primary-dark); }
+  .hero p.tagline {
+    font-size: 17px;
+    color: var(--text-secondary);
+    margin: 12px auto 28px;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.y { background: var(--yellow); }
+  .dot.g { background: var(--green); }
+  .dot.b { background: var(--blue); }
+  .dot.p { background: var(--pink); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: var(--surface);
+  }
+  .btn-disabled {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border-color: var(--border);
+    cursor: default;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--surface);
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+  }
+  .download-note {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .download-note a { color: var(--primary); font-weight: 600; text-decoration: underline; }
+
+  .features {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0;
+  }
+  .features h2 {
+    font-size: 20px;
+    color: var(--primary-dark);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .feature {
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .feature strong { display: block; font-size: 15px; margin-bottom: 4px; color: var(--text); }
+  .feature span { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+
+  footer {
+    text-align: center;
+    padding: 28px 0 40px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  footer a { color: var(--primary); text-decoration: underline; }
+
+  @media (max-width: 480px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero wrap">
+    <img class="icon" src="../assets/icon.png" alt="Ícone do App do Pentecostal">
+    <h1>App do Pentecostal</h1>
+    <p class="tagline">Sua Bíblia sempre à mão: leia, destaque versículos e guarde suas anotações no celular.</p>
+
+    <div class="dots">
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+      <span class="dot b"></span>
+      <span class="dot p"></span>
+    </div>
+
+    <!-- Quando tiver o APK publicado ou o app na Play Store, troque este bloco pelo link real de download. -->
+    <span class="btn btn-disabled" aria-disabled="true">
+      Baixar para Android <span class="badge">Em breve</span>
+    </span>
+    <p class="download-note">
+      Ainda não hospedado. Enquanto isso, veja o <a href="../site/index.html">site do app</a>
+      ou acompanhe o <a href="https://github.com/Erickaocode/App-do-pentecostal">código no GitHub</a>.
+    </p>
+  </div>
+
+  <div class="features">
+    <div class="wrap">
+      <h2>O que você encontra no app</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <strong>Bíblia completa</strong>
+          <span>Leitura por livro e capítulo, com navegação rápida entre os textos.</span>
+        </div>
+        <div class="feature">
+          <strong>Busca por palavras</strong>
+          <span>Encontre qualquer versículo digitando um trecho do texto.</span>
+        </div>
+        <div class="feature">
+          <strong>Favoritos</strong>
+          <span>Marque os versículos que mais tocam você para reler depois.</span>
+        </div>
+        <div class="feature">
+          <strong>Anotações</strong>
+          <span>Escreva reflexões pessoais vinculadas a cada versículo.</span>
+        </div>
+        <div class="feature">
+          <strong>Grifos coloridos</strong>
+          <span>Destaque trechos em quatro cores para organizar seu estudo.</span>
+        </div>
+        <div class="feature">
+          <strong>Tudo no seu celular</strong>
+          <span>Seus dados ficam salvos localmente, sem depender de internet para ler.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>App do Pentecostal · <a href="../site/index.html">Site do app</a></p>
+  </footer>
+
+</body>
+</html>
