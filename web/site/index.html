@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App do Pentecostal</title>
+<meta name="description" content="App do Pentecostal: leia a Bíblia, destaque versículos, favorite e anote suas reflexões, tudo em um só lugar.">
+<link rel="icon" href="../assets/favicon.png">
+<style>
+  :root {
+    --bg: #FAF6F0;
+    --surface: #FFFFFF;
+    --border: #E7DFD3;
+    --text: #2B2320;
+    --text-secondary: #6F6459;
+    --primary: #7A4B2A;
+    --primary-dark: #5C371D;
+    --accent: #B4772C;
+    --yellow: #F5D76E;
+    --green: #A9D6A0;
+    --blue: #A9C7E8;
+    --pink: #EBB6C7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; margin: 0; }
+  a { color: inherit; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 56px 0; }
+
+  /* Header / nav */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary-dark);
+    text-decoration: none;
+  }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+
+  nav ul {
+    display: flex;
+    gap: 22px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  nav a { text-decoration: none; color: var(--text-secondary); }
+  nav a:hover { color: var(--primary); }
+
+  #nav-toggle { display: none; }
+  .burger { display: none; cursor: pointer; }
+
+  @media (max-width: 640px) {
+    .burger {
+      display: block;
+      font-size: 22px;
+      color: var(--primary-dark);
+      user-select: none;
+    }
+    nav {
+      display: none;
+      width: 100%;
+      order: 3;
+    }
+    nav ul { flex-direction: column; gap: 0; padding: 8px 0 12px; }
+    nav ul li { padding: 8px 0; border-top: 1px solid var(--border); }
+    .nav-bar { flex-wrap: wrap; }
+    #nav-toggle:checked ~ nav { display: block; }
+  }
+
+  /* Hero */
+  .hero { text-align: center; padding-top: 64px; }
+  .hero h1 { font-size: 32px; color: var(--primary-dark); }
+  .hero p { font-size: 17px; color: var(--text-secondary); max-width: 500px; margin: 14px auto 26px; line-height: 1.5; }
+  .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 26px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.y { background: var(--yellow); }
+  .dot.g { background: var(--green); }
+  .dot.b { background: var(--blue); }
+  .dot.p { background: var(--pink); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 26px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--primary); color: var(--surface); }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  /* Features */
+  .features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .section-title { text-align: center; margin-bottom: 32px; }
+  .section-title h2 { font-size: 24px; color: var(--primary-dark); }
+  .section-title p { color: var(--text-secondary); margin-top: 8px; font-size: 15px; }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .feature {
+    padding: 20px;
+    border-radius: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .feature h3 { font-size: 16px; color: var(--text); margin-bottom: 6px; }
+  .feature p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+
+  /* About */
+  .about .wrap { max-width: 640px; }
+  .about p { font-size: 16px; line-height: 1.7; color: var(--text-secondary); }
+  .about p + p { margin-top: 14px; }
+
+  /* Download CTA */
+  .cta {
+    background: var(--primary);
+    color: var(--surface);
+    text-align: center;
+  }
+  .cta h2 { color: var(--surface); font-size: 24px; }
+  .cta p { color: #F3E6D8; margin: 12px auto 24px; max-width: 440px; line-height: 1.5; }
+  .cta .btn-primary { background: var(--surface); color: var(--primary-dark); }
+  .cta .btn-primary:hover { background: #F3E6D8; }
+
+  footer {
+    text-align: center;
+    padding: 28px 0 40px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  footer a { color: var(--primary); text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    section { padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-bar">
+      <a class="brand" href="#top">
+        <img src="../assets/icon.png" alt="Ícone do App do Pentecostal">
+        App do Pentecostal
+      </a>
+      <input type="checkbox" id="nav-toggle">
+      <label class="burger" for="nav-toggle">&#9776;</label>
+      <nav>
+        <ul>
+          <li><a href="#funcionalidades">Funcionalidades</a></li>
+          <li><a href="#sobre">Sobre</a></li>
+          <li><a href="#download">Download</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="wrap">
+      <h1>Sua Bíblia, sempre por perto</h1>
+      <p>Leia, destaque versículos, favorite e escreva suas reflexões — tudo em um único app, feito para o seu dia a dia de fé.</p>
+      <div class="dots">
+        <span class="dot y"></span>
+        <span class="dot g"></span>
+        <span class="dot b"></span>
+        <span class="dot p"></span>
+      </div>
+      <a class="btn btn-primary" href="../landing/index.html">Baixar o app</a>
+    </div>
+  </section>
+
+  <section class="features" id="funcionalidades">
+    <div class="wrap">
+      <div class="section-title">
+        <h2>Feito para o seu estudo bíblico</h2>
+        <p>Recursos simples, pensados para quem lê, estuda e anota a Palavra todos os dias.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>Bíblia completa</h3>
+          <p>Todos os livros e capítulos organizados para leitura rápida, com navegação entre capítulos.</p>
+        </div>
+        <div class="feature">
+          <h3>Busca por palavras</h3>
+          <p>Digite um trecho e encontre na hora o versículo que você procura.</p>
+        </div>
+        <div class="feature">
+          <h3>Favoritos</h3>
+          <p>Guarde os versículos que marcam sua caminhada para reler quando quiser.</p>
+        </div>
+        <div class="feature">
+          <h3>Anotações</h3>
+          <p>Escreva reflexões pessoais vinculadas a cada versículo, organizadas por data e busca.</p>
+        </div>
+        <div class="feature">
+          <h3>Grifos coloridos</h3>
+          <p>Destaque trechos em amarelo, verde, azul ou rosa para organizar seu estudo do seu jeito.</p>
+        </div>
+        <div class="feature">
+          <h3>Funciona sem internet</h3>
+          <p>Os dados ficam salvos no próprio celular, então você pode ler a qualquer hora e lugar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" id="sobre">
+    <div class="wrap">
+      <div class="section-title">
+        <h2>Sobre o app</h2>
+      </div>
+      <p>
+        O App do Pentecostal nasceu para tornar a leitura e o estudo da Bíblia mais simples e acessíveis
+        no dia a dia. A ideia é que cada pessoa possa carregar a Palavra no bolso, grifar o que toca o
+        coração e guardar suas próprias reflexões junto de cada versículo.
+      </p>
+      <p>
+        O projeto está em desenvolvimento contínuo, com novas funcionalidades sendo adicionadas aos poucos.
+        Acompanhe as novidades e o código-fonte no
+        <a href="https://github.com/Erickaocode/App-do-pentecostal">repositório no GitHub</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="cta" id="download">
+    <div class="wrap">
+      <h2>Pronto para começar?</h2>
+      <p>Baixe o app e leve a Bíblia com você para onde for.</p>
+      <a class="btn btn-primary" href="../landing/index.html">Ir para a página de download</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>App do Pentecostal · <a href="https://github.com/Erickaocode/App-do-pentecostal">Código no GitHub</a></p>
+  </footer>
+
+</body>
+</html>
