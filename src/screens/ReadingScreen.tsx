@@ -12,6 +12,7 @@ import {
   removeHighlight,
   setHighlight,
 } from '../db/userQueries';
+import { useUserDb } from '../db/UserDbProvider';
 import { VerseActionSheet } from '../components/VerseActionSheet';
 import type { BibleStackParamList } from '../navigation/types';
 import { colors, highlightColorValue } from '../theme';
@@ -22,6 +23,7 @@ type Props = NativeStackScreenProps<BibleStackParamList, 'Reading'>;
 export function ReadingScreen({ route, navigation }: Props) {
   const { bookAbbrev, bookName, chapter, focusVerse } = route.params;
   const db = useSQLiteContext();
+  const userDb = useUserDb();
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [highlights, setHighlights] = useState<Record<number, string>>({});
   const [chapterCount, setChapterCount] = useState(1);
@@ -36,7 +38,7 @@ export function ReadingScreen({ route, navigation }: Props) {
   const load = useCallback(async () => {
     const [rows, hRows, book] = await Promise.all([
       getChapterVerses(db, bookAbbrev, chapter),
-      listHighlightsForChapter(db, bookAbbrev, chapter),
+      listHighlightsForChapter(userDb, bookAbbrev, chapter),
       getBookByAbbrev(db, bookAbbrev),
     ]);
     setVerses(rows);
@@ -46,7 +48,7 @@ export function ReadingScreen({ route, navigation }: Props) {
       map[h.verse] = h.color;
     });
     setHighlights(map);
-  }, [db, bookAbbrev, chapter]);
+  }, [db, userDb, bookAbbrev, chapter]);
 
   useEffect(() => {
     load();
@@ -65,7 +67,7 @@ export function ReadingScreen({ route, navigation }: Props) {
 
   async function openVerse(verse: BibleVerse) {
     setSelectedVerse(verse);
-    const fav = await queryIsFavorite(db, bookAbbrev, chapter, verse.verse);
+    const fav = await queryIsFavorite(userDb, bookAbbrev, chapter, verse.verse);
     setSelectedIsFavorite(!!fav);
   }
 
@@ -84,9 +86,9 @@ export function ReadingScreen({ route, navigation }: Props) {
     const ref = currentVerseRef();
     if (!ref) return;
     if (selectedIsFavorite) {
-      await removeFavorite(db, ref.bookAbbrev, ref.chapter, ref.verse);
+      await removeFavorite(userDb, ref.bookAbbrev, ref.chapter, ref.verse);
     } else {
-      await addFavorite(db, ref);
+      await addFavorite(userDb, ref);
     }
     setSelectedIsFavorite(!selectedIsFavorite);
   }
@@ -94,10 +96,10 @@ export function ReadingScreen({ route, navigation }: Props) {
   async function handlePickHighlight(colorKey: string | null) {
     if (!selectedVerse) return;
     if (colorKey) {
-      await setHighlight(db, bookAbbrev, chapter, selectedVerse.verse, colorKey);
+      await setHighlight(userDb, bookAbbrev, chapter, selectedVerse.verse, colorKey);
       setHighlights((prev) => ({ ...prev, [selectedVerse.verse]: colorKey }));
     } else {
-      await removeHighlight(db, bookAbbrev, chapter, selectedVerse.verse);
+      await removeHighlight(userDb, bookAbbrev, chapter, selectedVerse.verse);
       setHighlights((prev) => {
         const next = { ...prev };
         delete next[selectedVerse.verse];
