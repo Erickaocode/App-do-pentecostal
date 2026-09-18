@@ -104,6 +104,13 @@
     color: var(--text-secondary);
   }
   .download-note a { color: var(--primary); font-weight: 600; text-decoration: underline; }
+  .download-note code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 13px;
+  }
 
   .features {
     background: var(--surface);
@@ -159,20 +166,24 @@
       <span class="dot p"></span>
     </div>
 
-    <!-- Quando tiver os instaladores/APK publicados, troque cada botão pelo link real de download. -->
+    <!-- Quando o APK for publicado, troque o botão do Android pelo link real de download. -->
     <div class="download-grid">
-      <span class="btn btn-disabled" aria-disabled="true">
-        Baixar para Windows <span class="badge">Em breve</span>
-      </span>
-      <span class="btn btn-disabled" aria-disabled="true">
-        Baixar para Linux <span class="badge">Em breve</span>
-      </span>
+      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/desktop-v1.0.0/App-do-Pentecostal-Windows-x64.zip">
+        Baixar para Windows <span class="badge">Portátil</span>
+      </a>
+      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/desktop-v1.0.0/App-do-Pentecostal-Linux-x64.tar.gz">
+        Baixar para Linux <span class="badge">Portátil</span>
+      </a>
       <span class="btn btn-disabled" aria-disabled="true">
         Baixar para Android <span class="badge">Em breve</span>
       </span>
     </div>
     <p class="download-note">
-      As versões para PC e Android ainda não foram publicadas.
+      Windows e Linux: baixe, extraia o arquivo e execute — não precisa instalar nada.
+      No Windows, o aviso do SmartScreen ("Windows protegeu seu PC") aparece porque o
+      programa ainda não é assinado digitalmente; clique em <strong>Mais informações</strong>
+      → <strong>Executar assim mesmo</strong>. No Linux, dê permissão de execução ao arquivo
+      <code>app-do-pentecostal-desktop</code> antes de abrir (<code>chmod +x</code>).
     </p>
     <p class="download-note">
       Veja também o <a href="../site/index.html">site do app</a>
