@@ -116,8 +116,25 @@
   }
   .btn-primary { background: var(--primary); color: var(--surface); }
   .btn-primary:hover { background: var(--primary-dark); }
+  .btn-disabled {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    cursor: default;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--surface);
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-left: 4px;
+  }
   .hero-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-  .hero-note { margin-top: 14px; font-size: 14px; color: var(--text-secondary); }
 
   /* Features */
   .features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -200,9 +217,10 @@
         <span class="dot p"></span>
       </div>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="../landing/index.html">Baixar o app</a>
+        <span class="btn btn-disabled" aria-disabled="true">Windows <span class="badge">Em breve</span></span>
+        <span class="btn btn-disabled" aria-disabled="true">Linux <span class="badge">Em breve</span></span>
+        <span class="btn btn-disabled" aria-disabled="true">Android <span class="badge">Em breve</span></span>
       </div>
-      <p class="hero-note">Versões para PC e Android</p>
     </div>
   </section>
 
