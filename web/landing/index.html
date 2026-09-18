@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>App do Pentecostal — Baixe o app</title>
-<meta name="description" content="Baixe o App do Pentecostal: leia a Bíblia, destaque versículos e guarde suas anotações no celular.">
+<meta name="description" content="Baixe o App do Pentecostal para Windows, Linux ou Android: leia a Bíblia, destaque versículos e guarde suas anotações.">
 <link rel="icon" href="../assets/favicon.png">
 <style>
   :root {
@@ -92,6 +92,12 @@
     border-radius: 999px;
     margin-left: 8px;
   }
+  .download-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
   .download-note {
     margin-top: 14px;
     font-size: 14px;
@@ -144,7 +150,7 @@
   <div class="hero wrap">
     <img class="icon" src="../assets/icon.png" alt="Ícone do App do Pentecostal">
     <h1>App do Pentecostal</h1>
-    <p class="tagline">Sua Bíblia sempre à mão: leia, destaque versículos e guarde suas anotações no celular.</p>
+    <p class="tagline">Sua Bíblia sempre à mão: leia, destaque versículos e guarde suas anotações no PC ou no celular.</p>
 
     <div class="dots">
       <span class="dot y"></span>
@@ -153,13 +159,20 @@
       <span class="dot p"></span>
     </div>
 
-    <!-- Quando tiver o APK publicado ou o app na Play Store, troque este bloco pelo link real de download. -->
-    <span class="btn btn-disabled" aria-disabled="true">
-      Baixar para Android <span class="badge">Em breve</span>
-    </span>
+    <!-- Quando tiver os instaladores/APK publicados, troque cada botão pelo link real de download. -->
+    <div class="download-grid">
+      <span class="btn btn-disabled" aria-disabled="true">
+        Baixar para Windows <span class="badge">Em breve</span>
+      </span>
+      <span class="btn btn-disabled" aria-disabled="true">
+        Baixar para Linux <span class="badge">Em breve</span>
+      </span>
+      <span class="btn btn-disabled" aria-disabled="true">
+        Baixar para Android <span class="badge">Em breve</span>
+      </span>
+    </div>
     <p class="download-note">
-      O app para celular ainda não está publicado. Enquanto isso, você já pode
-      <a href="../webapp/index.html">usar o app direto no navegador</a>, sem instalar nada.
+      As versões para PC e Android ainda não foram publicadas.
     </p>
     <p class="download-note">
       Veja também o <a href="../site/index.html">site do app</a>
@@ -192,7 +205,7 @@
           <span>Destaque trechos em quatro cores para organizar seu estudo.</span>
         </div>
         <div class="feature">
-          <strong>Tudo no seu celular</strong>
+          <strong>Funciona sem internet</strong>
           <span>Seus dados ficam salvos localmente, sem depender de internet para ler.</span>
         </div>
       </div>
