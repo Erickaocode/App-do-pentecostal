@@ -1,0 +1,55 @@
+{
+  "name": "app-do-pentecostal-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App do Pentecostal para computador (Windows, macOS e Linux)",
+  "main": "main.js",
+  "scripts": {
+    "build:web": "cd .. && npx expo export --platform web --output-dir web/webapp",
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "br.com.checkoutrh.appdopentecostal",
+    "productName": "App do Pentecostal",
+    "files": [
+      "main.js",
+      "build/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/webapp",
+        "to": "webapp"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.png",
+      "category": "public.app-category.reference"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Education"
+    }
+  }
+}
