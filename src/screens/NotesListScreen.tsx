@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { listNotes } from '../db/userQueries';
 import type { NotesStackParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import type { ThemeColors } from '../theme';
 import type { Note } from '../types';
 
 type Props = NativeStackScreenProps<NotesStackParamList, 'NotesList'>;
@@ -15,6 +16,8 @@ export function NotesListScreen({ navigation }: Props) {
   const db = useUserDb();
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const reload = useCallback(
     (q?: string) => {
@@ -86,64 +89,66 @@ export function NotesListScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  searchRow: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 16,
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  addButton: {
-    backgroundColor: colors.primary,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  empty: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-    marginTop: 12,
-    lineHeight: 20,
-  },
-  listContent: { padding: 16, paddingTop: 0, gap: 10 },
-  noteCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 10,
-  },
-  noteTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 2,
-  },
-  noteRef: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  noteContent: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 19,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    searchRow: {
+      flexDirection: 'row',
+      gap: 10,
+      padding: 16,
+      alignItems: 'center',
+    },
+    input: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    addButton: {
+      backgroundColor: colors.primary,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    empty: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+      marginTop: 12,
+      lineHeight: 20,
+    },
+    listContent: { padding: 16, paddingTop: 0, gap: 10 },
+    noteCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      marginBottom: 10,
+    },
+    noteTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 2,
+    },
+    noteRef: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
+      marginBottom: 4,
+    },
+    noteContent: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 19,
+    },
+  });
+}
