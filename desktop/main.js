@@ -1,7 +1,150 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
+
+const REPO = 'Erickaocode/App-do-pentecostal';
+const RELEASES_URL = `https://api.github.com/repos/${REPO}/releases`;
+
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, { headers: { 'User-Agent': 'app-do-pentecostal-desktop' } }, (res) => {
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`GitHub respondeu ${res.statusCode}`));
+          res.resume();
+          return;
+        }
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      })
+      .on('error', reject);
+  });
+}
+
+function parseVersion(v) {
+  return String(v)
+    .split('.')
+    .map((n) => parseInt(n, 10) || 0);
+}
+
+function isNewerVersion(a, b) {
+  const pa = parseVersion(a);
+  const pb = parseVersion(b);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+    const da = pa[i] || 0;
+    const db = pb[i] || 0;
+    if (da !== db) return da > db;
+  }
+  return false;
+}
+
+function pickAssetUrl(release) {
+  const assets = release.assets || [];
+  if (process.platform === 'win32') {
+    const exe = assets.find((a) => a.name.toLowerCase().endsWith('.exe'));
+    if (exe) return exe.browser_download_url;
+  }
+  if (process.platform === 'linux') {
+    const pkg = assets.find((a) => a.name.toLowerCase().endsWith('.tar.gz'));
+    if (pkg) return pkg.browser_download_url;
+  }
+  return release.html_url;
+}
+
+async function checkForUpdates() {
+  const releases = await fetchJson(RELEASES_URL);
+  const desktopReleases = releases
+    .filter((r) => typeof r.tag_name === 'string' && /^desktop-v/.test(r.tag_name))
+    .map((r) => ({ ...r, version: r.tag_name.replace('desktop-v', '') }))
+    .sort((a, b) => (isNewerVersion(a.version, b.version) ? -1 : 1));
+
+  const latest = desktopReleases[0];
+  const currentVersion = app.getVersion();
+
+  if (!latest) {
+    return { hasUpdate: false, currentVersion };
+  }
+
+  return {
+    hasUpdate: isNewerVersion(latest.version, currentVersion),
+    currentVersion,
+    latestVersion: latest.version,
+    downloadUrl: pickAssetUrl(latest),
+  };
+}
+
+async function handleUpdateCheckRequest() {
+  try {
+    const result = await checkForUpdates();
+    if (result.hasUpdate) {
+      const { response } = await dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Atualização disponível',
+        message: `Uma nova versão está disponível (v${result.latestVersion}). Você está usando a v${result.currentVersion}.`,
+        buttons: ['Baixar agora', 'Agora não'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+      if (response === 0 && result.downloadUrl) {
+        shell.openExternal(result.downloadUrl);
+      }
+    } else {
+      await dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Tudo em dia',
+        message: 'Você já está usando a versão mais recente do App do Pentecostal.',
+      });
+    }
+    return result;
+  } catch (error) {
+    await dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      title: 'Não foi possível verificar',
+      message: 'Não deu para checar atualizações agora. Verifique sua conexão com a internet e tente novamente.',
+    });
+    return { hasUpdate: false, error: error.message };
+  }
+}
+
+ipcMain.handle('check-for-updates', handleUpdateCheckRequest);
+
+function injectUpdateButton() {
+  if (!mainWindow) return;
+  mainWindow.webContents
+    .executeJavaScript(
+      `(function() {
+        if (document.getElementById('desktop-update-btn')) return;
+        var btn = document.createElement('button');
+        btn.id = 'desktop-update-btn';
+        btn.title = 'Verificar atualizações';
+        btn.textContent = '⟳';
+        btn.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:999999;width:34px;height:34px;line-height:34px;text-align:center;background:#7A4B2A;color:#fff;border:none;border-radius:50%;padding:0;font-size:16px;font-family:sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);opacity:0.55;transition:opacity .15s;';
+        btn.onmouseenter = function() { btn.style.opacity = '1'; };
+        btn.onmouseleave = function() { btn.style.opacity = '0.55'; };
+        btn.onclick = function() {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          var original = btn.textContent;
+          btn.textContent = '…';
+          window.desktopApp.checkForUpdates().finally(function() {
+            btn.disabled = false;
+            btn.textContent = original;
+          });
+        };
+        document.body.appendChild(btn);
+      })();`
+    )
+    .catch(() => {});
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -95,6 +238,15 @@ function buildMenu() {
       ],
     },
     { role: 'windowMenu', label: 'Janela' },
+    {
+      label: 'Ajuda',
+      submenu: [
+        {
+          label: 'Verificar atualizações',
+          click: () => handleUpdateCheckRequest(),
+        },
+      ],
+    },
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -120,6 +272,7 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -127,6 +280,8 @@ async function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  mainWindow.webContents.on('did-finish-load', injectUpdateButton);
 
   mainWindow.loadURL(`http://127.0.0.1:${port}/`);
 
