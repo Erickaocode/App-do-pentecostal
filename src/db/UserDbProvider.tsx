@@ -5,7 +5,7 @@ import { colors } from '../theme';
 
 const UserDbContext = createContext<SQLite.SQLiteDatabase | null>(null);
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 async function initUserDatabase(db: SQLite.SQLiteDatabase) {
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
@@ -14,6 +14,16 @@ async function initUserDatabase(db: SQLite.SQLiteDatabase) {
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS activity_log (
+      date TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
 
     CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

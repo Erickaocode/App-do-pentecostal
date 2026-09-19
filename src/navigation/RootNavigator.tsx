@@ -5,31 +5,42 @@ import React from 'react';
 import { BooksScreen } from '../screens/BooksScreen';
 import { ChaptersScreen } from '../screens/ChaptersScreen';
 import { FavoritesListScreen } from '../screens/FavoritesListScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { NoteEditorScreen } from '../screens/NoteEditorScreen';
 import { NotesListScreen } from '../screens/NotesListScreen';
 import { ReadingScreen } from '../screens/ReadingScreen';
 import { SearchScreen } from '../screens/SearchScreen';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import type {
   BibleStackParamList,
   FavoritesStackParamList,
+  HomeStackParamList,
   NotesStackParamList,
   RootTabParamList,
 } from './types';
 
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const BibleStack = createNativeStackNavigator<BibleStackParamList>();
 const NotesStack = createNativeStackNavigator<NotesStackParamList>();
 const FavoritesStack = createNativeStackNavigator<FavoritesStackParamList>();
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-const stackScreenOptions = {
-  headerStyle: { backgroundColor: colors.surface },
-  headerTintColor: colors.textPrimary,
-  headerTitleStyle: { fontWeight: '700' as const },
-  contentStyle: { backgroundColor: colors.background },
-};
+function HomeStackNavigator() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="Home" component={HomeScreen} />
+    </HomeStack.Navigator>
+  );
+}
 
 function BibleStackNavigator() {
+  const { colors } = useTheme();
+  const stackScreenOptions = {
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.textPrimary,
+    headerTitleStyle: { fontWeight: '700' as const },
+    contentStyle: { backgroundColor: colors.background },
+  };
   return (
     <BibleStack.Navigator screenOptions={stackScreenOptions}>
       <BibleStack.Screen name="Books" component={BooksScreen} options={{ title: 'Bíblia' }} />
@@ -41,6 +52,13 @@ function BibleStackNavigator() {
 }
 
 function NotesStackNavigator() {
+  const { colors } = useTheme();
+  const stackScreenOptions = {
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.textPrimary,
+    headerTitleStyle: { fontWeight: '700' as const },
+    contentStyle: { backgroundColor: colors.background },
+  };
   return (
     <NotesStack.Navigator screenOptions={stackScreenOptions}>
       <NotesStack.Screen
@@ -54,6 +72,13 @@ function NotesStackNavigator() {
 }
 
 function FavoritesStackNavigator() {
+  const { colors } = useTheme();
+  const stackScreenOptions = {
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.textPrimary,
+    headerTitleStyle: { fontWeight: '700' as const },
+    contentStyle: { backgroundColor: colors.background },
+  };
   return (
     <FavoritesStack.Navigator screenOptions={stackScreenOptions}>
       <FavoritesStack.Screen
@@ -66,6 +91,8 @@ function FavoritesStackNavigator() {
 }
 
 export function RootNavigator() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -75,6 +102,14 @@ export function RootNavigator() {
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
       }}
     >
+      <Tab.Screen
+        name="InicioTab"
+        component={HomeStackNavigator}
+        options={{
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
+        }}
+      />
       <Tab.Screen
         name="BibliaTab"
         component={BibleStackNavigator}

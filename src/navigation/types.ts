@@ -1,5 +1,9 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+export type HomeStackParamList = {
+  Home: undefined;
+};
+
 export type BibleStackParamList = {
   Books: undefined;
   Chapters: { bookAbbrev: string; bookName: string; chapterCount: number };
@@ -26,6 +30,7 @@ export type FavoritesStackParamList = {
 };
 
 export type RootTabParamList = {
+  InicioTab: NavigatorScreenParams<HomeStackParamList>;
   BibliaTab: NavigatorScreenParams<BibleStackParamList>;
   AnotacoesTab: NavigatorScreenParams<NotesStackParamList>;
   FavoritosTab: NavigatorScreenParams<FavoritesStackParamList>;
