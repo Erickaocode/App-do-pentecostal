@@ -1,4 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { hashString } from '../utils/dates';
 import type { BibleBook, BibleVerse } from '../types';
 
 export function getBooks(db: SQLiteDatabase): Promise<BibleBook[]> {
@@ -27,4 +28,13 @@ export function searchVerses(db: SQLiteDatabase, term: string): Promise<BibleVer
 
 export function getBookByAbbrev(db: SQLiteDatabase, abbrev: string): Promise<BibleBook | null> {
   return db.getFirstAsync<BibleBook>('SELECT * FROM books WHERE abbrev = ?', abbrev);
+}
+
+/** Escolhe um versículo determinístico a partir de uma semente (ex: a data de hoje), para o "versículo do dia". */
+export async function getVerseBySeed(db: SQLiteDatabase, seed: string): Promise<BibleVerse | null> {
+  const totalRow = await db.getFirstAsync<{ total: number }>('SELECT COUNT(*) as total FROM verses');
+  const total = totalRow?.total ?? 0;
+  if (total === 0) return null;
+  const offset = hashString(seed) % total;
+  return db.getFirstAsync<BibleVerse>('SELECT * FROM verses ORDER BY id ASC LIMIT 1 OFFSET ?', offset);
 }
