@@ -93,10 +93,6 @@ export function HomeScreen({ navigation }: Props) {
     });
   }
 
-  function goToTab(tab: 'BibliaTab' | 'AnotacoesTab' | 'FavoritosTab') {
-    navigation.getParent<any>()?.navigate(tab);
-  }
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -154,22 +150,6 @@ export function HomeScreen({ navigation }: Props) {
           </View>
         </Pressable>
       ) : null}
-
-      <Text style={styles.sectionLabel}>Acesso rápido</Text>
-      <View style={styles.quickRow}>
-        <Pressable style={styles.quickCard} onPress={() => goToTab('BibliaTab')}>
-          <Ionicons name="book" size={22} color={colors.primary} />
-          <Text style={styles.quickLabel}>Bíblia</Text>
-        </Pressable>
-        <Pressable style={styles.quickCard} onPress={() => goToTab('AnotacoesTab')}>
-          <Ionicons name="document-text" size={22} color={colors.primary} />
-          <Text style={styles.quickLabel}>Anotações</Text>
-        </Pressable>
-        <Pressable style={styles.quickCard} onPress={() => goToTab('FavoritosTab')}>
-          <Ionicons name="heart" size={22} color={colors.primary} />
-          <Text style={styles.quickLabel}>Favoritos</Text>
-        </Pressable>
-      </View>
     </ScrollView>
   );
 }
@@ -250,17 +230,5 @@ function createStyles(colors: ThemeColors) {
     },
     verseAction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     verseActionText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
-    quickRow: { flexDirection: 'row', gap: 10 },
-    quickCard: {
-      flex: 1,
-      alignItems: 'center',
-      gap: 8,
-      backgroundColor: colors.surface,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingVertical: 16,
-    },
-    quickLabel: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
   });
 }
