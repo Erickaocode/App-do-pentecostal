@@ -1,14 +1,17 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BibleStackParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import type { ThemeColors } from '../theme';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Chapters'>;
 
 export function ChaptersScreen({ route, navigation }: Props) {
   const { bookAbbrev, bookName, chapterCount } = route.params;
   const chapters = Array.from({ length: chapterCount }, (_, i) => i + 1);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: bookName });
@@ -34,19 +37,21 @@ export function ChaptersScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  grid: { padding: 12 },
-  cell: {
-    flex: 1,
-    aspectRatio: 1,
-    margin: 6,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cellText: { fontSize: 17, fontWeight: '600', color: colors.primaryDark },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    grid: { padding: 12 },
+    cell: {
+      flex: 1,
+      aspectRatio: 1,
+      margin: 6,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cellText: { fontSize: 17, fontWeight: '600', color: colors.primaryDark },
+  });
+}
