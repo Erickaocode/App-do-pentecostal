@@ -97,6 +97,82 @@
   .hero { text-align: center; padding-top: 64px; }
   .hero h1 { font-size: 32px; color: var(--primary-dark); }
   .hero p { font-size: 17px; color: var(--text-secondary); max-width: 500px; margin: 14px auto 26px; line-height: 1.5; }
+
+  /* Device mockups */
+  .hero-devices {
+    position: relative;
+    max-width: 640px;
+    margin: 48px auto 0;
+    padding-bottom: 40px;
+  }
+  .laptop-frame {
+    background: linear-gradient(180deg, #3a322c, #241d19);
+    border-radius: 16px 16px 5px 5px;
+    padding: 14px 14px 8px;
+    box-shadow: 0 40px 70px -25px rgba(43, 35, 32, 0.45);
+  }
+  .laptop-cam {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #5a5048;
+    margin: 0 auto 8px;
+  }
+  .laptop-screen {
+    aspect-ratio: 16 / 10;
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--bg) center top / cover no-repeat;
+  }
+  .laptop-stand {
+    height: 16px;
+    margin: 0 -10px;
+    background: linear-gradient(180deg, #3a322c, #1a1512);
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    justify-content: center;
+  }
+  .laptop-stand::after {
+    content: '';
+    width: 22%;
+    height: 100%;
+    background: #120d0b;
+    border-radius: 0 0 8px 8px;
+  }
+  .phone {
+    position: absolute;
+    width: 27%;
+    right: 4%;
+    bottom: 14px;
+    filter: drop-shadow(0 25px 35px rgba(43, 35, 32, 0.35));
+  }
+  .phone-frame {
+    background: linear-gradient(180deg, #3a322c, #241d19);
+    border-radius: 30px;
+    padding: 9px;
+  }
+  .phone-screen {
+    position: relative;
+    aspect-ratio: 9 / 19.5;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--bg) center top / cover no-repeat;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 46%;
+    height: 16px;
+    background: #241d19;
+    border-radius: 0 0 10px 10px;
+    z-index: 1;
+  }
+
+  @media (max-width: 640px) {
+    .hero-devices { max-width: 320px; }
+  }
   .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 26px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot.y { background: var(--yellow); }
@@ -223,6 +299,21 @@
         <span class="btn btn-disabled" aria-disabled="true">Android <span class="badge">Em breve</span></span>
       </div>
       <p class="hero-note">Veja as instruções de instalação na <a href="../landing/index.html">página de download</a>.</p>
+
+      <div class="hero-devices">
+        <div class="laptop-frame">
+          <div class="laptop-cam"></div>
+          <div class="laptop-screen" style="background-image: url('../assets/screenshots/laptop-home.png');"></div>
+        </div>
+        <div class="laptop-stand"></div>
+        <div class="phone">
+          <div class="phone-frame">
+            <div class="phone-screen" style="background-image: url('../assets/screenshots/phone-home.png');">
+              <div class="phone-notch"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
