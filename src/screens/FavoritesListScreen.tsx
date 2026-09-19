@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { listFavorites, removeFavorite } from '../db/userQueries';
 import type { FavoritesStackParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import type { ThemeColors } from '../theme';
 import type { Favorite } from '../types';
 
 type Props = NativeStackScreenProps<FavoritesStackParamList, 'FavoritesList'>;
@@ -14,6 +15,8 @@ type Props = NativeStackScreenProps<FavoritesStackParamList, 'FavoritesList'>;
 export function FavoritesListScreen({ navigation }: Props) {
   const db = useUserDb();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const reload = useCallback(() => {
     listFavorites(db).then(setFavorites);
@@ -81,38 +84,40 @@ export function FavoritesListScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  empty: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-    marginTop: 24,
-    lineHeight: 20,
-  },
-  listContent: { padding: 16, gap: 10 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  cardRef: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  cardText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    lineHeight: 21,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    empty: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+      marginTop: 24,
+      lineHeight: 20,
+    },
+    listContent: { padding: 16, gap: 10 },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      marginBottom: 10,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    cardRef: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    cardText: {
+      fontSize: 15,
+      color: colors.textPrimary,
+      lineHeight: 21,
+    },
+  });
+}
