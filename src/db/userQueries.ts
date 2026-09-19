@@ -1,5 +1,42 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { dateKey } from '../utils/dates';
 import type { Favorite, Highlight, Note, VerseRef } from '../types';
+
+// ---------- Configurações ----------
+
+export async function getSetting(db: SQLiteDatabase, key: string): Promise<string | null> {
+  const row = await db.getFirstAsync<{ value: string }>(
+    'SELECT value FROM settings WHERE key = ?',
+    key
+  );
+  return row?.value ?? null;
+}
+
+export async function setSetting(db: SQLiteDatabase, key: string, value: string): Promise<void> {
+  await db.runAsync(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    key,
+    value
+  );
+}
+
+// ---------- Atividade / sequência de dias ----------
+
+export async function recordTodayActivity(db: SQLiteDatabase): Promise<void> {
+  await db.runAsync(
+    'INSERT OR IGNORE INTO activity_log (date, created_at) VALUES (?, ?)',
+    dateKey(),
+    new Date().toISOString()
+  );
+}
+
+export async function listActivityDates(db: SQLiteDatabase): Promise<string[]> {
+  const rows = await db.getAllAsync<{ date: string }>(
+    'SELECT date FROM activity_log ORDER BY date DESC'
+  );
+  return rows.map((r) => r.date);
+}
 
 // ---------- Notas ----------
 
