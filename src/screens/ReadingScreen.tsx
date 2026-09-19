@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
 import {
@@ -15,7 +15,9 @@ import {
 import { useUserDb } from '../db/UserDbProvider';
 import { VerseActionSheet } from '../components/VerseActionSheet';
 import type { BibleStackParamList } from '../navigation/types';
-import { colors, highlightColorValue } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import { highlightColorValue, highlightTextColor } from '../theme';
+import type { ThemeColors } from '../theme';
 import type { BibleVerse, Highlight, VerseRef } from '../types';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Reading'>;
@@ -24,6 +26,8 @@ export function ReadingScreen({ route, navigation }: Props) {
   const { bookAbbrev, bookName, chapter, focusVerse } = route.params;
   const db = useSQLiteContext();
   const userDb = useUserDb();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [highlights, setHighlights] = useState<Record<number, string>>({});
   const [chapterCount, setChapterCount] = useState(1);
@@ -133,17 +137,22 @@ export function ReadingScreen({ route, navigation }: Props) {
         onScrollToIndexFailed={() => {}}
         renderItem={({ item }) => {
           const highlightKey = highlights[item.verse];
+          const highlighted = !!highlightKey;
           return (
             <Pressable
               onPress={() => openVerse(item)}
               style={[
                 styles.verseRow,
-                highlightKey ? { backgroundColor: highlightColorValue(highlightKey) } : null,
+                highlighted ? { backgroundColor: highlightColorValue(highlightKey) } : null,
                 focusVerse === item.verse ? styles.verseFocused : null,
               ]}
             >
-              <Text style={styles.verseNumber}>{item.verse}</Text>
-              <Text style={styles.verseText}>{item.text}</Text>
+              <Text style={[styles.verseNumber, highlighted && styles.verseNumberOnHighlight]}>
+                {item.verse}
+              </Text>
+              <Text style={[styles.verseText, highlighted && styles.verseTextOnHighlight]}>
+                {item.text}
+              </Text>
             </Pressable>
           );
         }}
@@ -182,60 +191,68 @@ export function ReadingScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  listContent: { padding: 16, paddingBottom: 90 },
-  verseRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  verseFocused: {
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  verseNumber: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.accent,
-    marginTop: 3,
-    minWidth: 20,
-  },
-  verseText: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.textPrimary,
-  },
-  footerNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 12,
-    backgroundColor: colors.background,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-  },
-  navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  navButtonDisabled: {
-    opacity: 0.35,
-  },
-  navButtonText: {
-    color: colors.surface,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    listContent: { padding: 16, paddingBottom: 90 },
+    verseRow: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+    },
+    verseFocused: {
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    verseNumber: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.accent,
+      marginTop: 3,
+      minWidth: 20,
+    },
+    verseNumberOnHighlight: {
+      color: highlightTextColor,
+    },
+    verseText: {
+      flex: 1,
+      fontSize: 16,
+      lineHeight: 24,
+      color: colors.textPrimary,
+    },
+    verseTextOnHighlight: {
+      color: highlightTextColor,
+    },
+    footerNav: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      padding: 12,
+      backgroundColor: colors.background,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    navButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    navButtonDisabled: {
+      opacity: 0.35,
+    },
+    navButtonText: {
+      color: colors.surface,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+  });
+}

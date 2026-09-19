@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, highlightColors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import { highlightColors } from '../theme';
+import type { ThemeColors } from '../theme';
 import type { VerseRef } from '../types';
 
 interface Props {
@@ -25,6 +27,9 @@ export function VerseActionSheet({
   onPickHighlight,
   onCreateNote,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (!verseRef) return null;
 
   return (
@@ -79,68 +84,70 @@ export function VerseActionSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 32,
-  },
-  reference: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primaryDark,
-    marginBottom: 4,
-  },
-  verseText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 16,
-  },
-  action: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-  },
-  actionText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 8,
-    marginBottom: 10,
-  },
-  colorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  colorDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorDotSelected: {
-    borderColor: colors.textPrimary,
-  },
-  clearHighlight: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+      paddingBottom: 32,
+    },
+    reference: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.primaryDark,
+      marginBottom: 4,
+    },
+    verseText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 16,
+    },
+    action: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 12,
+    },
+    actionText: {
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    sectionLabel: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 8,
+      marginBottom: 10,
+    },
+    colorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+    },
+    colorDot: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    colorDotSelected: {
+      borderColor: colors.textPrimary,
+    },
+    clearHighlight: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
+}

@@ -1,10 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getBookByAbbrev, searchVerses } from '../db/bibleQueries';
 import type { BibleStackParamList } from '../navigation/types';
-import { colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import type { ThemeColors } from '../theme';
 import type { BibleVerse } from '../types';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Search'>;
@@ -15,6 +16,8 @@ export function SearchScreen({ navigation }: Props) {
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   async function runSearch(value: string) {
     setTerm(value);
@@ -75,39 +78,41 @@ export function SearchScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  input: {
-    margin: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
-  empty: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    marginTop: 24,
-  },
-  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
-  resultRow: {
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  resultRef: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 2,
-  },
-  resultText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    lineHeight: 21,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    input: {
+      margin: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.textPrimary,
+    },
+    empty: {
+      textAlign: 'center',
+      color: colors.textSecondary,
+      marginTop: 24,
+    },
+    listContent: { paddingHorizontal: 16, paddingBottom: 24 },
+    resultRow: {
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    resultRef: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primary,
+      marginBottom: 2,
+    },
+    resultText: {
+      fontSize: 15,
+      color: colors.textPrimary,
+      lineHeight: 21,
+    },
+  });
+}
