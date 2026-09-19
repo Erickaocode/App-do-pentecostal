@@ -52,12 +52,17 @@
     transition: opacity .6s ease, visibility .6s ease;
   }
   .intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  .intro-icon {
-    width: 76px;
-    height: 76px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(43, 35, 32, 0.25);
-    animation: introPop .7s cubic-bezier(.34, 1.56, .64, 1) both;
+  .intro-flame {
+    width: 68px;
+    height: 92px;
+    animation: introPop .7s cubic-bezier(.34, 1.56, .64, 1) both, flameGlow 1.6s ease-in-out .7s infinite;
+  }
+  .flame-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform-origin: 50% 100%;
+    animation: flameFlicker 1.6s ease-in-out infinite;
   }
   .intro-title {
     font-family: Georgia, 'Times New Roman', serif;
@@ -74,6 +79,17 @@
   @keyframes introFadeUp {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes flameFlicker {
+    0%, 100% { transform: scale(1, 1) skewX(0deg); }
+    20% { transform: scale(.96, 1.04) skewX(-2deg); }
+    40% { transform: scale(1.04, .95) skewX(2deg); }
+    60% { transform: scale(.97, 1.03) skewX(-1deg); }
+    80% { transform: scale(1.03, .97) skewX(1.5deg); }
+  }
+  @keyframes flameGlow {
+    0%, 100% { filter: drop-shadow(0 10px 18px rgba(217, 113, 29, .35)); }
+    50% { filter: drop-shadow(0 14px 30px rgba(240, 146, 46, .55)); }
   }
 
   /* Scroll reveal */
@@ -369,7 +385,19 @@
   <noscript><style>.intro{display:none} .reveal{opacity:1!important;transform:none!important}</style></noscript>
 
   <div class="intro" id="intro">
-    <img class="intro-icon" src="../assets/icon.png" alt="">
+    <div class="intro-flame">
+      <svg class="flame-svg" viewBox="0 0 64 88" aria-hidden="true">
+        <defs>
+          <linearGradient id="flameGradient" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#B3452F"/>
+            <stop offset="45%" stop-color="#D9711D"/>
+            <stop offset="75%" stop-color="#F0922E"/>
+            <stop offset="100%" stop-color="#F5D76E"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#flameGradient)" d="M32 2C20 20 8 34 8 54a24 24 0 0 0 48 0c0-12-8-20-12-28 2 10-4 16-10 16-7 0-11-6-11-14 0-10 7-18 9-26z"/>
+      </svg>
+    </div>
     <div class="intro-title">App do Pentecostal</div>
   </div>
 
