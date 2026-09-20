@@ -23,7 +23,8 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ]
   }
 }
