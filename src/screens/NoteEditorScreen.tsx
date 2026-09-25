@@ -1,7 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { createNote, deleteNote, getNote, updateNote } from '../db/userQueries';
 import type { NotesStackParamList } from '../navigation/types';
@@ -16,6 +26,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const db = useUserDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const headerHeight = useHeaderHeight();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [verseRef, setVerseRef] = useState<VerseRef | null>(
@@ -94,37 +105,47 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   }, [navigation, isEditing, existingNote, colors]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {verseRef ? (
-        <View style={styles.verseBanner}>
-          <Text style={styles.verseBannerRef}>
-            {verseRef.bookName} {verseRef.chapter}:{verseRef.verse}
-          </Text>
-          <Text style={styles.verseBannerText}>{verseRef.text}</Text>
-        </View>
-      ) : null}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior="padding"
+      keyboardVerticalOffset={headerHeight}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        {verseRef ? (
+          <View style={styles.verseBanner}>
+            <Text style={styles.verseBannerRef}>
+              {verseRef.bookName} {verseRef.chapter}:{verseRef.verse}
+            </Text>
+            <Text style={styles.verseBannerText}>{verseRef.text}</Text>
+          </View>
+        ) : null}
 
-      <TextInput
-        style={styles.titleInput}
-        placeholder="Título"
-        placeholderTextColor={colors.textSecondary}
-        value={title}
-        onChangeText={setTitle}
-      />
-      <TextInput
-        style={styles.contentInput}
-        placeholder="Escreva sua anotação..."
-        placeholderTextColor={colors.textSecondary}
-        value={content}
-        onChangeText={setContent}
-        multiline
-        textAlignVertical="top"
-      />
+        <TextInput
+          style={styles.titleInput}
+          placeholder="Título"
+          placeholderTextColor={colors.textSecondary}
+          value={title}
+          onChangeText={setTitle}
+        />
+        <TextInput
+          style={styles.contentInput}
+          placeholder="Escreva sua anotação..."
+          placeholderTextColor={colors.textSecondary}
+          value={content}
+          onChangeText={setContent}
+          multiline
+          textAlignVertical="top"
+        />
 
-      <Pressable style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Salvar</Text>
-      </Pressable>
-    </ScrollView>
+        <Pressable style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Salvar</Text>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
