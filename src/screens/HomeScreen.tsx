@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBookByAbbrev, getVerseBySeed } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
 import {
@@ -31,6 +32,7 @@ export function HomeScreen({ navigation }: Props) {
   const userDb = useUserDb();
   const { colors, scheme, toggleScheme } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
 
   const [streak, setStreak] = useState(0);
   const [verseOfDay, setVerseOfDay] = useState<VerseOfDay | null>(null);
@@ -94,7 +96,10 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: 16 + insets.top }]}
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>{greeting()}</Text>
