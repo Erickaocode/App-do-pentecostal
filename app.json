@@ -1,17 +1,17 @@
 {
   "expo": {
     "name": "App do Pentecostal",
-    "slug": "app",
+    "slug": "app-do-pentecostal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "br.com.checkoutrh.appdopentecostal"
+      "bundleIdentifier": "com.erickaocode.appdopentecostal"
     },
     "android": {
-      "package": "br.com.checkoutrh.appdopentecostal",
+      "package": "com.erickaocode.appdopentecostal",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FAF6F0",

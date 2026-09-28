@@ -15,7 +15,7 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "br.com.checkoutrh.appdopentecostal",
+    "appId": "com.erickaocode.appdopentecostal",
     "productName": "App do Pentecostal",
     "files": [
       "main.js",
