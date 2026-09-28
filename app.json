@@ -37,6 +37,12 @@
           "backgroundColor": "#FAF6F0"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2e445d13-731f-4a4a-b399-3fa679dbe191"
+      }
+    },
+    "owner": "erickaocode"
   }
 }
