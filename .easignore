@@ -42,5 +42,9 @@ yarn-error.*
 /ios
 /android
 
-# APK baixado do EAS para anexar no Release
+# Não fazem parte do build Android (EAS)
+/desktop/
+/web/
+/store/
+/.claude/
 /release-android/
