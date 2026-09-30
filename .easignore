@@ -42,7 +42,7 @@ yarn-error.*
 /ios
 /android
 
-# Não fazem parte do build Android (EAS)
+# Não fazem parte do build mobile (EAS)
 /desktop/
 /web/
 /store/
