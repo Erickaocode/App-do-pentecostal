@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
 import {
   addFavorite,
@@ -39,24 +40,46 @@ export function ReadingScreen({ route, navigation }: Props) {
     navigation.setOptions({ title: `${bookName} ${chapter}` });
   }, [navigation, bookName, chapter]);
 
-  const load = useCallback(async () => {
-    const [rows, hRows, book] = await Promise.all([
-      getChapterVerses(db, bookAbbrev, chapter),
-      listHighlightsForChapter(userDb, bookAbbrev, chapter),
-      getBookByAbbrev(db, bookAbbrev),
-    ]);
-    setVerses(rows);
-    setChapterCount(book?.chapter_count ?? 1);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getChapterVerses(db, bookAbbrev, chapter), getBookByAbbrev(db, bookAbbrev)]).then(
+      ([rows, book]) => {
+        // Ao trocar de capítulo rápido, uma consulta antiga não pode sobrescrever a nova.
+        if (cancelled) return;
+        setVerses(rows);
+        setChapterCount(book?.chapter_count ?? 1);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [db, bookAbbrev, chapter]);
+
+  // Contador de leituras: só a resposta da leitura mais recente é aplicada.
+  const highlightsRequest = useRef(0);
+
+  const loadHighlights = useCallback(async () => {
+    const request = ++highlightsRequest.current;
+    const rows = await listHighlightsForChapter(userDb, bookAbbrev, chapter);
+    if (request !== highlightsRequest.current) return;
     const map: Record<number, string> = {};
-    hRows.forEach((h: Highlight) => {
+    rows.forEach((h: Highlight) => {
       map[h.verse] = h.color;
     });
     setHighlights(map);
-  }, [db, userDb, bookAbbrev, chapter]);
+  }, [userDb, bookAbbrev, chapter]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // O banco é a fonte da verdade: relê os destaques sempre que a tela volta ao foco
+  // e quando o app volta do segundo plano, para nunca exibir um estado antigo.
+  useFocusEffect(
+    useCallback(() => {
+      loadHighlights();
+      const subscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') loadHighlights();
+      });
+      return () => subscription.remove();
+    }, [loadHighlights])
+  );
 
   useEffect(() => {
     if (focusVerse && verses.length > 0) {
@@ -89,27 +112,41 @@ export function ReadingScreen({ route, navigation }: Props) {
   async function handleToggleFavorite() {
     const ref = currentVerseRef();
     if (!ref) return;
-    if (selectedIsFavorite) {
-      await removeFavorite(userDb, ref.bookAbbrev, ref.chapter, ref.verse);
-    } else {
-      await addFavorite(userDb, ref);
+    const wasFavorite = selectedIsFavorite;
+    setSelectedIsFavorite(!wasFavorite);
+    try {
+      if (wasFavorite) {
+        await removeFavorite(userDb, ref.bookAbbrev, ref.chapter, ref.verse);
+      } else {
+        await addFavorite(userDb, ref);
+      }
+    } catch {
+      setSelectedIsFavorite(wasFavorite);
+      Alert.alert('Não foi possível salvar', 'Tente novamente.');
     }
-    setSelectedIsFavorite(!selectedIsFavorite);
   }
 
   async function handlePickHighlight(colorKey: string | null) {
     if (!selectedVerse) return;
-    if (colorKey) {
-      await setHighlight(userDb, bookAbbrev, chapter, selectedVerse.verse, colorKey);
-      setHighlights((prev) => ({ ...prev, [selectedVerse.verse]: colorKey }));
-    } else {
-      await removeHighlight(userDb, bookAbbrev, chapter, selectedVerse.verse);
-      setHighlights((prev) => {
-        const next = { ...prev };
-        delete next[selectedVerse.verse];
-        return next;
-      });
+    const verse = selectedVerse.verse;
+    // Mostra a cor na hora e grava em seguida; se a gravação falhar, recarrega do banco.
+    setHighlights((prev) => {
+      const next = { ...prev };
+      if (colorKey) next[verse] = colorKey;
+      else delete next[verse];
+      return next;
+    });
+    try {
+      if (colorKey) {
+        await setHighlight(userDb, bookAbbrev, chapter, verse, colorKey);
+      } else {
+        await removeHighlight(userDb, bookAbbrev, chapter, verse);
+      }
+    } catch {
+      Alert.alert('Não foi possível salvar o destaque', 'Tente novamente.');
     }
+    // Invalida qualquer leitura iniciada antes desta gravação e confirma o estado real.
+    loadHighlights();
   }
 
   function handleCreateNote() {
