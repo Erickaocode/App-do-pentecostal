@@ -32,9 +32,7 @@ O **App do Pentecostal** é a sua Bíblia sempre por perto. Você pode ler, estu
 Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você marca fica salvo no seu próprio aparelho.
 
 <div align="center">
-<img src="web/assets/screenshots/phone-home.png" alt="Tela inicial no celular" height="520" />
-&nbsp;&nbsp;&nbsp;
-<img src="web/assets/screenshots/laptop-home.png" alt="Tela inicial no computador" height="520" />
+<img src="web/assets/screenshots/devices.png" alt="App do Pentecostal aberto num notebook e num celular" width="760" />
 </div>
 
 ## ✨ Funcionalidades
