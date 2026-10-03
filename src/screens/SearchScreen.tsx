@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getBookByAbbrev, searchVerses } from '../db/bibleQueries';
 import type { BibleStackParamList } from '../navigation/types';
@@ -9,6 +9,9 @@ import type { ThemeColors } from '../theme';
 import type { BibleVerse } from '../types';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Search'>;
+
+/** Espera a pessoa parar de digitar antes de consultar os ~31 mil versículos. */
+const SEARCH_DELAY_MS = 300;
 
 export function SearchScreen({ navigation }: Props) {
   const db = useSQLiteContext();
@@ -19,19 +22,30 @@ export function SearchScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  async function runSearch(value: string) {
-    setTerm(value);
-    if (value.trim().length < 3) {
+  const searchRequest = useRef(0);
+
+  useEffect(() => {
+    const request = ++searchRequest.current;
+    if (term.trim().length < 3) {
       setResults([]);
       setSearched(false);
+      setLoading(false);
       return;
     }
     setLoading(true);
-    const rows = await searchVerses(db, value);
-    setResults(rows);
-    setSearched(true);
-    setLoading(false);
-  }
+    const timer = setTimeout(async () => {
+      try {
+        const rows = await searchVerses(db, term);
+        // Uma busca antiga que termina depois não pode substituir a mais recente.
+        if (request !== searchRequest.current) return;
+        setResults(rows);
+        setSearched(true);
+      } finally {
+        if (request === searchRequest.current) setLoading(false);
+      }
+    }, SEARCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [db, term]);
 
   async function openVerse(verse: BibleVerse) {
     const book = await getBookByAbbrev(db, verse.book_abbrev);
@@ -50,7 +64,7 @@ export function SearchScreen({ navigation }: Props) {
         placeholder="Digite ao menos 3 letras..."
         placeholderTextColor={colors.textSecondary}
         value={term}
-        onChangeText={runSearch}
+        onChangeText={setTerm}
         autoFocus
       />
       {loading ? <ActivityIndicator style={{ marginTop: 16 }} color={colors.primary} /> : null}
