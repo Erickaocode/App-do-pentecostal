@@ -6,10 +6,10 @@
 
 **Leia a Bíblia, grife versículos, favorite e anote suas reflexões, sem internet.**
 
-[![Android](https://img.shields.io/badge/Android-APK-3DDC84?logo=android&logoColor=white)](https://github.com/Erickaocode/App-do-pentecostal/releases)
-[![iOS](https://img.shields.io/badge/iOS-App%20Store-000000?logo=apple&logoColor=white)](#-baixe-o-app)
-[![Windows](https://img.shields.io/badge/Windows-instalador-0078D4?logo=windows&logoColor=white)](https://github.com/Erickaocode/App-do-pentecostal/releases)
-[![Linux](https://img.shields.io/badge/Linux-tar.gz-FCC624?logo=linux&logoColor=black)](https://github.com/Erickaocode/App-do-pentecostal/releases)
+![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)
+![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-0078D4?logo=windows&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
 <br />
 [![Expo](https://img.shields.io/badge/Expo-SDK%2057-000020?logo=expo&logoColor=white)](https://docs.expo.dev/versions/v57.0.0/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
@@ -17,7 +17,6 @@
 [![SQLite](https://img.shields.io/badge/SQLite-offline-003B57?logo=sqlite&logoColor=white)](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)
 
 [Funcionalidades](#-funcionalidades) •
-[Baixe o app](#-baixe-o-app) •
 [Privacidade](#-privacidade) •
 [Para desenvolvedores](#-para-desenvolvedores) •
 [Publicando versões](#-publicando-novas-versões)
@@ -51,20 +50,6 @@ Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você m
 | 🔥 | **Sequência de dias** | Acompanhe quantos dias seguidos você abriu a Palavra |
 | 🌙 | **Tema escuro** | Leitura confortável à noite, com um toque |
 | 📶 | **Funciona sem internet** | A Bíblia inteira vem dentro do app |
-
-## 📲 Baixe o app
-
-| Plataforma | Onde baixar |
-|---|---|
-| **Android** | APK na página de [Releases](https://github.com/Erickaocode/App-do-pentecostal/releases) (em breve na Google Play) |
-| **iOS** | Em breve na App Store |
-| **Windows** | Instalador `.exe` em [Releases](https://github.com/Erickaocode/App-do-pentecostal/releases) |
-| **Linux** | Pacote `.tar.gz` em [Releases](https://github.com/Erickaocode/App-do-pentecostal/releases) |
-
-> [!NOTE]
-> **Windows:** o instalador ainda não tem assinatura digital. Se aparecer *"O Windows protegeu o computador"*, clique em **Mais informações → Executar assim mesmo**.
->
-> **Android (APK):** permita a instalação de apps de fontes desconhecidas quando o celular pedir.
 
 ## 🔒 Privacidade
 
