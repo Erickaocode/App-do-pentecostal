@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useUserDb } from '../db/UserDbProvider';
 import { getSetting, setSetting } from '../db/userQueries';
 import { darkColors, lightColors, ThemeColors } from '../theme';
@@ -18,6 +18,8 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const db = useUserDb();
   const [scheme, setScheme] = useState<ColorScheme>('light');
+  const schemeRef = useRef(scheme);
+  schemeRef.current = scheme;
 
   useEffect(() => {
     let cancelled = false;
@@ -30,18 +32,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [db]);
 
   const toggleScheme = useCallback(() => {
-    setScheme((prev) => {
-      const next: ColorScheme = prev === 'light' ? 'dark' : 'light';
-      setSetting(db, SETTING_KEY, next);
-      return next;
-    });
+    // A gravação fica fora do setState: atualizadores de estado devem ser puros
+    // (o React pode chamá-los mais de uma vez).
+    const next: ColorScheme = schemeRef.current === 'light' ? 'dark' : 'light';
+    schemeRef.current = next;
+    setScheme(next);
+    setSetting(db, SETTING_KEY, next).catch(() => {});
   }, [db]);
 
-  const value: ThemeContextValue = {
-    scheme,
-    colors: scheme === 'dark' ? darkColors : lightColors,
-    toggleScheme,
-  };
+  // Objeto estável: as telas só redesenham quando o tema realmente muda.
+  const value = useMemo<ThemeContextValue>(
+    () => ({
+      scheme,
+      colors: scheme === 'dark' ? darkColors : lightColors,
+      toggleScheme,
+    }),
+    [scheme, toggleScheme]
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
