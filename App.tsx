@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { UserDbProvider } from './src/db/UserDbProvider';
@@ -20,17 +20,20 @@ function LoadingScreen() {
 
 function ThemedApp() {
   const { scheme, colors: themeColors } = useTheme();
-  const navigationTheme = {
-    ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
-    colors: {
-      ...(scheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
-      background: themeColors.background,
-      card: themeColors.surface,
-      text: themeColors.textPrimary,
-      border: themeColors.border,
-      primary: themeColors.primary,
-    },
-  };
+  const navigationTheme = useMemo(
+    () => ({
+      ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
+      colors: {
+        ...(scheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
+        background: themeColors.background,
+        card: themeColors.surface,
+        text: themeColors.textPrimary,
+        border: themeColors.border,
+        primary: themeColors.primary,
+      },
+    }),
+    [scheme, themeColors]
+  );
 
   return (
     <>
