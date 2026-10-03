@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSQLiteContext } from 'expo-sqlite';
+import { useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBookByAbbrev, getVerseBySeed } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
@@ -27,6 +27,21 @@ interface VerseOfDay {
   bookName: string;
 }
 
+/** O versículo do dia só muda à meia-noite: guarda em memória para não consultar a Bíblia toda vez que a aba ganha foco. */
+let verseOfDayCache: { day: string; value: VerseOfDay | null } | null = null;
+
+async function loadVerseOfDay(db: SQLiteDatabase, day: string): Promise<VerseOfDay | null> {
+  if (verseOfDayCache?.day === day) return verseOfDayCache.value;
+  const verse = await getVerseBySeed(db, day);
+  let value: VerseOfDay | null = null;
+  if (verse) {
+    const book = await getBookByAbbrev(db, verse.book_abbrev);
+    value = { verse, bookName: book?.name ?? verse.book_abbrev };
+  }
+  verseOfDayCache = { day, value };
+  return value;
+}
+
 export function HomeScreen({ navigation }: Props) {
   const db = useSQLiteContext();
   const userDb = useUserDb();
@@ -38,24 +53,31 @@ export function HomeScreen({ navigation }: Props) {
   const [verseOfDay, setVerseOfDay] = useState<VerseOfDay | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const load = useCallback(async () => {
-    await recordTodayActivity(userDb);
-    const dates = await listActivityDates(userDb);
-    setStreak(computeStreak(dates));
+  const load = useCallback(
+    async (isActive: () => boolean) => {
+      await recordTodayActivity(userDb);
+      const dates = await listActivityDates(userDb);
+      if (!isActive()) return;
+      setStreak(computeStreak(dates));
 
-    const seed = dateKey();
-    const verse = await getVerseBySeed(db, seed);
-    if (verse) {
-      const book = await getBookByAbbrev(db, verse.book_abbrev);
-      setVerseOfDay({ verse, bookName: book?.name ?? verse.book_abbrev });
+      const today = await loadVerseOfDay(db, dateKey());
+      if (!isActive() || !today) return;
+      setVerseOfDay(today);
+      // O favorito pode ter mudado em outra aba, então este sempre é relido.
+      const { verse } = today;
       const fav = await queryIsFavorite(userDb, verse.book_abbrev, verse.chapter, verse.verse);
-      setIsFavorite(!!fav);
-    }
-  }, [db, userDb]);
+      if (isActive()) setIsFavorite(!!fav);
+    },
+    [db, userDb]
+  );
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      let active = true;
+      load(() => active);
+      return () => {
+        active = false;
+      };
     }, [load])
   );
 
@@ -73,12 +95,18 @@ export function HomeScreen({ navigation }: Props) {
   async function handleToggleFavorite() {
     const ref = verseRef();
     if (!ref) return;
-    if (isFavorite) {
-      await removeFavorite(userDb, ref.bookAbbrev, ref.chapter, ref.verse);
-    } else {
-      await addFavorite(userDb, ref);
+    const wasFavorite = isFavorite;
+    setIsFavorite(!wasFavorite);
+    try {
+      if (wasFavorite) {
+        await removeFavorite(userDb, ref.bookAbbrev, ref.chapter, ref.verse);
+      } else {
+        await addFavorite(userDb, ref);
+      }
+    } catch {
+      setIsFavorite(wasFavorite);
+      Alert.alert('Não foi possível salvar', 'Tente novamente.');
     }
-    setIsFavorite(!isFavorite);
   }
 
   function openVerseOfDay() {
