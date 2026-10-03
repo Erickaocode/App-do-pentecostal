@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
 import {
@@ -111,11 +111,27 @@ export function ReadingScreen({ route, navigation }: Props) {
     []
   );
 
-  async function openVerse(verse: BibleVerse) {
-    setSelectedVerse(verse);
-    const fav = await queryIsFavorite(userDb, bookAbbrev, chapter, verse.verse);
-    setSelectedIsFavorite(!!fav);
-  }
+  const openVerse = useCallback(
+    async (verse: BibleVerse) => {
+      setSelectedVerse(verse);
+      const fav = await queryIsFavorite(userDb, bookAbbrev, chapter, verse.verse);
+      setSelectedIsFavorite(!!fav);
+    },
+    [userDb, bookAbbrev, chapter]
+  );
+
+  const renderVerse = useCallback(
+    ({ item }: { item: BibleVerse }) => (
+      <VerseRow
+        verse={item}
+        highlightKey={highlights[item.verse]}
+        focused={focusVerse === item.verse}
+        styles={styles}
+        onPress={openVerse}
+      />
+    ),
+    [highlights, focusVerse, styles, openVerse]
+  );
 
   function currentVerseRef(): VerseRef | null {
     if (!selectedVerse) return null;
@@ -191,27 +207,10 @@ export function ReadingScreen({ route, navigation }: Props) {
         keyExtractor={(v) => String(v.id)}
         contentContainerStyle={styles.listContent}
         onScrollToIndexFailed={handleScrollToIndexFailed}
-        renderItem={({ item }) => {
-          const highlightKey = highlights[item.verse];
-          const highlighted = !!highlightKey;
-          return (
-            <Pressable
-              onPress={() => openVerse(item)}
-              style={[
-                styles.verseRow,
-                highlighted ? { backgroundColor: highlightColorValue(highlightKey) } : null,
-                focusVerse === item.verse ? styles.verseFocused : null,
-              ]}
-            >
-              <Text style={[styles.verseNumber, highlighted && styles.verseNumberOnHighlight]}>
-                {item.verse}
-              </Text>
-              <Text style={[styles.verseText, highlighted && styles.verseTextOnHighlight]}>
-                {item.text}
-              </Text>
-            </Pressable>
-          );
-        }}
+        renderItem={renderVerse}
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={11}
       />
 
       <View style={styles.footerNav}>
@@ -246,6 +245,42 @@ export function ReadingScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+type ReadingStyles = ReturnType<typeof createStyles>;
+
+/** Linha memorizada: ao destacar um versículo, só ela é redesenhada, não o capítulo inteiro. */
+const VerseRow = memo(function VerseRow({
+  verse,
+  highlightKey,
+  focused,
+  styles,
+  onPress,
+}: {
+  verse: BibleVerse;
+  highlightKey: string | undefined;
+  focused: boolean;
+  styles: ReadingStyles;
+  onPress: (verse: BibleVerse) => void;
+}) {
+  const highlighted = !!highlightKey;
+  return (
+    <Pressable
+      onPress={() => onPress(verse)}
+      style={[
+        styles.verseRow,
+        highlighted ? { backgroundColor: highlightColorValue(highlightKey) } : null,
+        focused ? styles.verseFocused : null,
+      ]}
+    >
+      <Text style={[styles.verseNumber, highlighted && styles.verseNumberOnHighlight]}>
+        {verse.verse}
+      </Text>
+      <Text style={[styles.verseText, highlighted && styles.verseTextOnHighlight]}>
+        {verse.text}
+      </Text>
+    </Pressable>
+  );
+});
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
