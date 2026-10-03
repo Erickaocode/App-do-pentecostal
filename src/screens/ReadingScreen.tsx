@@ -82,15 +82,34 @@ export function ReadingScreen({ route, navigation }: Props) {
   );
 
   useEffect(() => {
-    if (focusVerse && verses.length > 0) {
-      const index = verses.findIndex((v) => v.verse === focusVerse);
-      if (index >= 0) {
-        setTimeout(() => {
-          listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.2 });
-        }, 200);
-      }
+    if (verses.length === 0) return;
+    if (!focusVerse) {
+      // Capítulo novo começa do topo, não na posição de rolagem do anterior.
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+      return;
     }
+    const index = verses.findIndex((v) => v.verse === focusVerse);
+    if (index < 0) return;
+    const timer = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.2 });
+    }, 200);
+    return () => clearTimeout(timer);
   }, [focusVerse, verses]);
+
+  // Versículos longe do topo ainda não foram medidos pela FlatList: rola até a altura
+  // estimada para renderizá-los e tenta de novo.
+  const handleScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      listRef.current?.scrollToOffset({
+        offset: info.averageItemLength * info.index,
+        animated: false,
+      });
+      setTimeout(() => {
+        listRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.2 });
+      }, 100);
+    },
+    []
+  );
 
   async function openVerse(verse: BibleVerse) {
     setSelectedVerse(verse);
@@ -171,7 +190,7 @@ export function ReadingScreen({ route, navigation }: Props) {
         data={verses}
         keyExtractor={(v) => String(v.id)}
         contentContainerStyle={styles.listContent}
-        onScrollToIndexFailed={() => {}}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
         renderItem={({ item }) => {
           const highlightKey = highlights[item.verse];
           const highlighted = !!highlightKey;
