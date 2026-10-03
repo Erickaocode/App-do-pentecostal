@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { listNotes } from '../db/userQueries';
@@ -19,9 +19,15 @@ export function NotesListScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  const listRequest = useRef(0);
+
   const reload = useCallback(
     (q?: string) => {
-      listNotes(db, q ?? search).then(setNotes);
+      const request = ++listRequest.current;
+      listNotes(db, q ?? search).then((rows) => {
+        // Ignora respostas de buscas que já foram substituídas por outra.
+        if (request === listRequest.current) setNotes(rows);
+      });
     },
     [db, search]
   );
