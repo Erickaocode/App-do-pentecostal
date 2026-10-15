@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSQLiteContext } from 'expo-sqlite';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
@@ -17,6 +16,7 @@ import {
 import { useUserDb } from '../db/UserDbProvider';
 import { VerseActionSheet } from '../components/VerseActionSheet';
 import type { BibleStackParamList } from '../navigation/types';
+import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import { highlightColorValue, highlightTextColor } from '../theme';
 import type { ThemeColors } from '../theme';
@@ -26,7 +26,7 @@ type Props = NativeStackScreenProps<BibleStackParamList, 'Reading'>;
 
 export function ReadingScreen({ route, navigation }: Props) {
   const { bookAbbrev, bookName, chapter, focusVerse } = route.params;
-  const db = useSQLiteContext();
+  const db = useBibleDb();
   const userDb = useUserDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
