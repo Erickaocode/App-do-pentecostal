@@ -25,15 +25,27 @@ const STOPWORDS = new Set(
   algo alguem algum alguma alguns ninguem nenhum nenhuma outro outra outros outras mesmo mesma
   ja ainda agora hoje ontem amanha sempre nunca depois antes entao assim tambem so apenas bem mal
   aqui ali la sim nao talvez coisa coisas vez vezes dia dias ano anos hora momento forma jeito
-  deus senhor jesus cristo versiculo versiculos texto leitura capitulo anotacao biblia palavra`.split(/\s+/)
+  deus senhor jesus cristo versiculo versiculos texto leitura capitulo anotacao biblia palavra
+  acho sinto senti preciso quero queria consigo consegui devia deveria falei falamos lembrei
+  pensei estudando estudei aprendi coisa pessoa pessoas gente parte sobre durante enquanto
+  daquele daquela daqueles daquelas naquele naquela deste desta disso nisso dele dela deles delas
+  nele nela neles nelas dificil facil grande pequeno`.split(/\s+/)
 );
 
-/** Palavras da anotação que valem uma busca, das mais longas (mais específicas) para as mais curtas. */
-export function keywords(normalizedText: string, max = 12): string[] {
-  const unique = new Set(
-    normalizedText.split(' ').filter((w) => w.length >= 4 && !STOPWORDS.has(w) && !/^\d+$/.test(w))
-  );
-  return [...unique].sort((a, b) => b.length - a.length).slice(0, max);
+/**
+ * Palavras da anotação que valem uma busca: as que mais se repetem primeiro (são o
+ * assunto da anotação) e, no empate, as mais longas (mais específicas).
+ */
+export function keywords(normalizedText: string, max = 10): string[] {
+  const counts = new Map<string, number>();
+  for (const w of normalizedText.split(' ')) {
+    if (w.length < 4 || STOPWORDS.has(w) || /^\d+$/.test(w)) continue;
+    counts.set(w, (counts.get(w) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
+    .slice(0, max)
+    .map(([w]) => w);
 }
 
 /** Radical simples: palavras longas perdem o final ("preocupado" → "preocupa") para pegar variações. */

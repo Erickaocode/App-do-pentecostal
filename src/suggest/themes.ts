@@ -15,7 +15,7 @@ export interface Theme {
 export const themes: Theme[] = [
   {
     name: 'Ansiedade e preocupação',
-    triggers: ['ansie', 'ansios', 'preocup', 'nervos', 'inquiet', 'estress', 'agoni'],
+    triggers: ['ansie', 'ansios', 'preocup', 'nervos', 'inquiet', 'estress', 'agoni', 'dormir', 'insoni', 'aperto no peito', 'mente nao para', 'cabeca nao para'],
     verses: [['Fp', 4, 6], ['1Pe', 5, 7], ['Mt', 6, 34], ['Sl', 55, 22], ['Jo', 14, 27]],
   },
   {
@@ -95,7 +95,7 @@ export const themes: Theme[] = [
   },
   {
     name: 'Solidão',
-    triggers: ['sozinh', 'solid', 'abandon', 'rejeit', 'excluid'],
+    triggers: ['sozinh', 'solid', 'abandon', 'rejeit', 'excluid', 'ninguem me entende', 'ninguem liga', 'ninguem se importa'],
     verses: [['Dt', 31, 6], ['Mt', 28, 20], ['Sl', 27, 10], ['Hb', 13, 5], ['Is', 43, 2]],
   },
   {
@@ -165,12 +165,12 @@ export const themes: Theme[] = [
   },
   {
     name: 'Perseguição e provação',
-    triggers: ['persegu', 'provac', 'prova ', 'luta', 'dificuldad', 'crise', 'deserto'],
+    triggers: ['persegu', 'provac', 'prova ', 'luta', 'dificuldad', 'crise', 'passando por um deserto', 'estou num deserto'],
     verses: [['Tg', 1, 2], ['Rm', 8, 28], ['1Pe', 4, 12], ['2Co', 4, 17], ['Mt', 5, 10]],
   },
   {
     name: 'Juventude',
-    triggers: ['jovem', 'jovens', 'juventud', 'adolesc', 'escola', 'faculdad', 'estud'],
+    triggers: ['jovem', 'jovens', 'juventud', 'adolesc', 'escola', 'faculdad', 'vestibular', 'enem'],
     verses: [['1Tm', 4, 12], ['Ec', 12, 1], ['Sl', 119, 9], ['2Tm', 2, 22], ['Pv', 1, 7]],
   },
   {
