@@ -72,12 +72,17 @@ export function BibleProvider({
     };
   }, [userDb, open]);
 
+  // Trocando de versão rápido, vale a última escolha, mesmo que outra termine de abrir depois.
+  const switchRequest = useRef(0);
+
   const setVersion = useCallback(
     async (id: string) => {
       const version = findBibleVersion(id);
       if (!version) return;
+      const request = ++switchRequest.current;
       try {
         const db = await open(version);
+        if (request !== switchRequest.current) return;
         setCurrent({ version, db });
         await setSetting(userDb, SETTING_KEY, version.id);
       } catch {
