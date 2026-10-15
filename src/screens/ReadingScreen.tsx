@@ -2,7 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  AppState,
+  Easing,
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
 import {
   addFavorite,
@@ -25,6 +35,9 @@ import { showMessage } from '../utils/dialogs';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Reading'>;
 
+const CHAPTER_ENTER_MS = 240;
+const CHAPTER_SLIDE_DISTANCE = 36;
+
 export function ReadingScreen({ route, navigation }: Props) {
   const { bookAbbrev, bookName, chapter, focusVerse } = route.params;
   const db = useBibleDb();
@@ -38,6 +51,29 @@ export function ReadingScreen({ route, navigation }: Props) {
   const [selectedIsFavorite, setSelectedIsFavorite] = useState(false);
   const listRef = useRef<FlatList<BibleVerse>>(null);
 
+  // Ao tocar em Próximo/Anterior, o capítulo novo entra deslizando do lado certo.
+  const slideDirection = useRef<1 | -1 | 0>(0);
+  const enterOpacity = useRef(new Animated.Value(1)).current;
+  const enterOffset = useRef(new Animated.Value(0)).current;
+
+  const playChapterEnter = useCallback(() => {
+    const direction = slideDirection.current;
+    slideDirection.current = 0;
+    if (direction === 0) return;
+    enterOpacity.setValue(0);
+    enterOffset.setValue(direction * CHAPTER_SLIDE_DISTANCE);
+    const config = {
+      toValue: 1,
+      duration: CHAPTER_ENTER_MS,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: Platform.OS !== 'web',
+    };
+    Animated.parallel([
+      Animated.timing(enterOpacity, config),
+      Animated.timing(enterOffset, { ...config, toValue: 0 }),
+    ]).start();
+  }, [enterOpacity, enterOffset]);
+
   useLayoutEffect(() => {
     navigation.setOptions({ title: `${bookName} ${chapter}` });
   }, [navigation, bookName, chapter]);
@@ -50,12 +86,13 @@ export function ReadingScreen({ route, navigation }: Props) {
         if (cancelled) return;
         setVerses(rows);
         setChapterCount(book?.chapter_count ?? 1);
+        playChapterEnter();
       }
     );
     return () => {
       cancelled = true;
     };
-  }, [db, bookAbbrev, chapter]);
+  }, [db, bookAbbrev, chapter, playChapterEnter]);
 
   // Alimenta o "Continuar lendo" da tela Início.
   useEffect(() => {
@@ -213,22 +250,30 @@ export function ReadingScreen({ route, navigation }: Props) {
 
   function goToChapter(next: number) {
     if (next < 1 || next > chapterCount) return;
+    slideDirection.current = next > chapter ? 1 : -1;
     navigation.setParams({ chapter: next, focusVerse: undefined });
   }
 
   return (
     <View style={styles.container}>
-      <FlatList
-        ref={listRef}
-        data={verses}
-        keyExtractor={(v) => String(v.id)}
-        contentContainerStyle={styles.listContent}
-        onScrollToIndexFailed={handleScrollToIndexFailed}
-        renderItem={renderVerse}
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={11}
-      />
+      <Animated.View
+        style={[
+          styles.container,
+          { opacity: enterOpacity, transform: [{ translateX: enterOffset }] },
+        ]}
+      >
+        <FlatList
+          ref={listRef}
+          data={verses}
+          keyExtractor={(v) => String(v.id)}
+          contentContainerStyle={styles.listContent}
+          onScrollToIndexFailed={handleScrollToIndexFailed}
+          renderItem={renderVerse}
+          initialNumToRender={20}
+          maxToRenderPerBatch={20}
+          windowSize={11}
+        />
+      </Animated.View>
 
       <View style={styles.footerNav}>
         <Pressable
