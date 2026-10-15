@@ -49,6 +49,7 @@ export function FavoritesListScreen({ navigation }: Props) {
         chapter: fav.chapter,
         focusVerse: fav.verse,
       },
+      initial: false,
     });
   }
 
