@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { VersionPicker } from '../components/VersionPicker';
 import { BooksScreen } from '../screens/BooksScreen';
-import { ChaptersScreen } from '../screens/ChaptersScreen';
 import { FavoritesListScreen } from '../screens/FavoritesListScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { NoteEditorScreen } from '../screens/NoteEditorScreen';
@@ -59,7 +58,6 @@ function BibleStackNavigator() {
         component={BooksScreen}
         options={{ title: 'Bíblia', headerRight: renderVersionPicker }}
       />
-      <BibleStack.Screen name="Chapters" component={ChaptersScreen} />
       <BibleStack.Screen
         name="Reading"
         component={ReadingScreen}
