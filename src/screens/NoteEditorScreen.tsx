@@ -12,6 +12,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { VerseSuggestions } from '../components/VerseSuggestions';
+import type { VerseWithBook } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
 import { createNote, deleteNote, getNote, updateNote } from '../db/userQueries';
 import type { NotesStackParamList } from '../navigation/types';
@@ -26,6 +28,17 @@ type Props = NativeStackScreenProps<NotesStackParamList, 'NoteEditor'>;
 const AUTOSAVE_DELAY_MS = 800;
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+/** Marca as linhas de versículos inseridos pelas sugestões: "João 3:16 — “Porque Deus...”". */
+const CITATION_SEPARATOR = ' — “';
+
+/** As sugestões olham o que a pessoa escreveu, não o texto dos versículos que ela já inseriu. */
+function withoutCitations(content: string): string {
+  return content
+    .split('\n')
+    .filter((line) => !line.includes(CITATION_SEPARATOR))
+    .join('\n');
+}
 
 export function NoteEditorScreen({ route, navigation }: Props) {
   const { noteId, prefill } = route.params ?? {};
@@ -165,6 +178,25 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     navigation.goBack();
   }
 
+  function handleInsertVerse(verse: VerseWithBook) {
+    const citation = `${verse.book_name} ${verse.chapter}:${verse.verse}${CITATION_SEPARATOR}${verse.text}”`;
+    setContent((prev) => (prev.trim() ? `${prev.trimEnd()}\n\n${citation}` : citation));
+  }
+
+  function handleOpenVerse(verse: VerseWithBook) {
+    // A anotação continua aberta nesta aba (e salva sozinha); a pessoa volta para ela depois.
+    navigation.getParent<any>()?.navigate('BibliaTab', {
+      screen: 'Reading',
+      params: {
+        bookAbbrev: verse.book_abbrev,
+        bookName: verse.book_name,
+        chapter: verse.chapter,
+        focusVerse: verse.verse,
+      },
+      initial: false,
+    });
+  }
+
   async function handleDelete() {
     if (!noteId) return;
     const confirmed = await confirmAction({
@@ -227,6 +259,14 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           onChangeText={setContent}
           multiline
           textAlignVertical="top"
+        />
+
+        <VerseSuggestions
+          text={[verseRef?.text, title, withoutCitations(content)].filter(Boolean).join('\n')}
+          exclude={verseRef ?? undefined}
+          citedText={content}
+          onInsert={handleInsertVerse}
+          onOpen={handleOpenVerse}
         />
 
         <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
