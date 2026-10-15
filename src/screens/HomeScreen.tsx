@@ -3,22 +3,24 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBookByAbbrev, getDailyVerse } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
 import {
   addFavorite,
+  getLastReading,
   isFavorite as queryIsFavorite,
   listActivityDates,
   recordTodayActivity,
   removeFavorite,
+  type LastReading,
 } from '../db/userQueries';
 import { useTheme } from '../context/ThemeContext';
 import type { HomeStackParamList } from '../navigation/types';
 import type { ThemeColors } from '../theme';
 import type { BibleVerse, VerseRef } from '../types';
-import { computeStreak, dateKey, greeting } from '../utils/dates';
+import { computeStreak, dateKey, greeting, lastSevenDays, longDate } from '../utils/dates';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -42,6 +44,15 @@ async function loadVerseOfDay(db: SQLiteDatabase, day: string): Promise<VerseOfD
   return value;
 }
 
+const serifFont = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia, serif' });
+
+function streakMessage(streak: number): string {
+  if (streak >= 30) return 'Um mês inteiro na Palavra. Que caminhada bonita!';
+  if (streak >= 7) return 'Mais de uma semana seguida. Continue firme!';
+  if (streak > 1) return 'Continue voltando todos os dias para manter o fogo aceso.';
+  return 'Você abriu a Palavra hoje. Volte amanhã para começar sua sequência!';
+}
+
 export function HomeScreen({ navigation }: Props) {
   const db = useSQLiteContext();
   const userDb = useUserDb();
@@ -50,15 +61,19 @@ export function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
 
   const [streak, setStreak] = useState(0);
+  const [activeDays, setActiveDays] = useState<Set<string>>(new Set());
   const [verseOfDay, setVerseOfDay] = useState<VerseOfDay | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [lastReading, setLastReading] = useState<LastReading | null>(null);
 
   const load = useCallback(
     async (isActive: () => boolean) => {
       await recordTodayActivity(userDb);
-      const dates = await listActivityDates(userDb);
+      const [dates, reading] = await Promise.all([listActivityDates(userDb), getLastReading(userDb)]);
       if (!isActive()) return;
       setStreak(computeStreak(dates));
+      setActiveDays(new Set(dates));
+      setLastReading(reading);
 
       const today = await loadVerseOfDay(db, dateKey());
       if (!isActive() || !today) return;
@@ -109,19 +124,63 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
+  async function handleShare() {
+    const ref = verseRef();
+    if (!ref) return;
+    try {
+      await Share.share({
+        message: `“${ref.text}”\n${ref.bookName} ${ref.chapter}:${ref.verse}`,
+      });
+    } catch {
+      // Navegadores sem suporte a compartilhamento: não há o que fazer além de ignorar.
+    }
+  }
+
+  function openReading(params: {
+    bookAbbrev: string;
+    bookName: string;
+    chapter: number;
+    focusVerse?: number;
+  }) {
+    navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Reading', params });
+  }
+
   function openVerseOfDay() {
     const ref = verseRef();
     if (!ref) return;
-    navigation.getParent<any>()?.navigate('BibliaTab', {
-      screen: 'Reading',
-      params: {
-        bookAbbrev: ref.bookAbbrev,
-        bookName: ref.bookName,
-        chapter: ref.chapter,
-        focusVerse: ref.verse,
-      },
+    openReading({
+      bookAbbrev: ref.bookAbbrev,
+      bookName: ref.bookName,
+      chapter: ref.chapter,
+      focusVerse: ref.verse,
     });
   }
+
+  function openContinueReading() {
+    if (lastReading) openReading(lastReading);
+    else navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Books' });
+  }
+
+  const shortcuts = [
+    {
+      icon: 'search' as const,
+      label: 'Buscar',
+      onPress: () => navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Search' }),
+    },
+    {
+      icon: 'create-outline' as const,
+      label: 'Anotar',
+      onPress: () =>
+        navigation.getParent<any>()?.navigate('AnotacoesTab', { screen: 'NoteEditor', params: {} }),
+    },
+    {
+      icon: 'heart-outline' as const,
+      label: 'Favoritos',
+      onPress: () => navigation.getParent<any>()?.navigate('FavoritosTab', { screen: 'FavoritesList' }),
+    },
+  ];
+
+  const week = lastSevenDays();
 
   return (
     <ScrollView
@@ -129,9 +188,9 @@ export function HomeScreen({ navigation }: Props) {
       contentContainerStyle={[styles.content, { paddingTop: 16 + insets.top }]}
     >
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>{greeting()}</Text>
-          <Text style={styles.title}>Sua jornada na Palavra</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.date}>{longDate()}</Text>
+          <Text style={styles.title}>{greeting()}!</Text>
         </View>
         <Pressable style={styles.themeToggle} onPress={toggleScheme} hitSlop={10}>
           <Ionicons
@@ -142,47 +201,94 @@ export function HomeScreen({ navigation }: Props) {
         </Pressable>
       </View>
 
-      <View style={styles.streakCard}>
-        <View style={styles.streakIconWrap}>
-          <Ionicons name="flame" size={28} color={colors.streak} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.streakCount}>
-            {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}
-          </Text>
-          <Text style={styles.streakSubtitle}>
-            {streak > 1
-              ? 'Continue acessando todos os dias para manter sua sequência!'
-              : 'Você acessou hoje. Volte amanhã para começar a sua sequência!'}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.sectionLabel}>Versículo do dia</Text>
       {verseOfDay ? (
-        <Pressable style={styles.verseCard} onPress={openVerseOfDay}>
-          <Text style={styles.verseRef}>
+        <Pressable style={styles.hero} onPress={openVerseOfDay}>
+          <Text style={styles.heroQuoteMark}>“</Text>
+          <View style={styles.heroLabelRow}>
+            <Ionicons name="sunny" size={14} color={colors.heroMuted} />
+            <Text style={styles.heroLabel}>Versículo do dia</Text>
+          </View>
+          <Text style={styles.heroText}>{verseOfDay.verse.text}</Text>
+          <Text style={styles.heroRef}>
             {verseOfDay.bookName} {verseOfDay.verse.chapter}:{verseOfDay.verse.verse}
           </Text>
-          <Text style={styles.verseText}>{verseOfDay.verse.text}</Text>
-          <View style={styles.verseActions}>
-            <Pressable style={styles.verseAction} onPress={handleToggleFavorite} hitSlop={8}>
+          <View style={styles.heroActions}>
+            <Pressable style={styles.heroButton} onPress={handleToggleFavorite} hitSlop={6}>
               <Ionicons
                 name={isFavorite ? 'heart' : 'heart-outline'}
-                size={18}
-                color={isFavorite ? colors.danger : colors.textSecondary}
+                size={17}
+                color={colors.heroText}
               />
-              <Text style={styles.verseActionText}>
-                {isFavorite ? 'Nos favoritos' : 'Favoritar'}
-              </Text>
+              <Text style={styles.heroButtonText}>{isFavorite ? 'Salvo' : 'Favoritar'}</Text>
             </Pressable>
-            <Pressable style={styles.verseAction} onPress={openVerseOfDay} hitSlop={8}>
-              <Ionicons name="book-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.verseActionText}>Ler no capítulo</Text>
+            <Pressable style={styles.heroButton} onPress={handleShare} hitSlop={6}>
+              <Ionicons name="share-social-outline" size={17} color={colors.heroText} />
+              <Text style={styles.heroButtonText}>Compartilhar</Text>
+            </Pressable>
+            <Pressable style={styles.heroIconButton} onPress={openVerseOfDay} hitSlop={6}>
+              <Ionicons name="book-outline" size={17} color={colors.heroText} />
             </Pressable>
           </View>
         </Pressable>
       ) : null}
+
+      <View style={styles.card}>
+        <View style={styles.streakTop}>
+          <View style={styles.streakIconWrap}>
+            <Ionicons name="flame" size={26} color={colors.streak} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.streakCount}>
+              {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}
+            </Text>
+            <Text style={styles.cardSubtitle}>{streakMessage(streak)}</Text>
+          </View>
+        </View>
+        <View style={styles.week}>
+          {week.map((day, index) => {
+            const done = activeDays.has(day.key);
+            const isToday = index === week.length - 1;
+            return (
+              <View key={day.key} style={styles.weekDay}>
+                <View
+                  style={[
+                    styles.weekDot,
+                    done && styles.weekDotDone,
+                    isToday && !done && styles.weekDotToday,
+                  ]}
+                >
+                  {done ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
+                </View>
+                <Text style={[styles.weekLabel, isToday && styles.weekLabelToday]}>
+                  {day.initial}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      <Pressable style={[styles.card, styles.continueCard]} onPress={openContinueReading}>
+        <View style={styles.continueIcon}>
+          <Ionicons name="book" size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardEyebrow}>{lastReading ? 'Continuar lendo' : 'Comece a ler'}</Text>
+          <Text style={styles.continueTitle}>
+            {lastReading ? `${lastReading.bookName} ${lastReading.chapter}` : 'Escolha um livro'}
+          </Text>
+        </View>
+        <Ionicons name="arrow-forward" size={20} color={colors.primary} />
+      </Pressable>
+
+      <View style={styles.shortcuts}>
+        {shortcuts.map((item) => (
+          <Pressable key={item.label} style={styles.shortcut} onPress={item.onPress}>
+            <Ionicons name={item.icon} size={22} color={colors.primary} />
+            <Text style={styles.shortcutLabel}>{item.label}</Text>
+          </Pressable>
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -190,78 +296,146 @@ export function HomeScreen({ navigation }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    content: { padding: 16, paddingBottom: 32, gap: 4 },
+    content: { padding: 16, paddingBottom: 32, gap: 14 },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: 18,
+      alignItems: 'center',
+      marginBottom: 4,
     },
-    greeting: { fontSize: 14, color: colors.textSecondary, marginBottom: 2 },
-    title: { fontSize: 22, fontWeight: '700', color: colors.textPrimary },
+    date: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    title: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
     themeToggle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 42,
+      height: 42,
+      borderRadius: 21,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    streakCard: {
+
+    hero: {
+      backgroundColor: colors.heroBackground,
+      borderRadius: 24,
+      padding: 22,
+      overflow: 'hidden',
+      boxShadow: '0px 8px 24px rgba(60, 35, 15, 0.22)',
+    },
+    heroQuoteMark: {
+      position: 'absolute',
+      top: -18,
+      right: 14,
+      fontSize: 140,
+      lineHeight: 160,
+      fontFamily: serifFont,
+      color: colors.heroText,
+      opacity: 0.1,
+    },
+    heroLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+    heroLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.heroMuted,
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+    },
+    heroText: {
+      fontSize: 21,
+      lineHeight: 31,
+      fontFamily: serifFont,
+      color: colors.heroText,
+      marginBottom: 14,
+    },
+    heroRef: { fontSize: 15, fontWeight: '700', color: colors.heroMuted, marginBottom: 20 },
+    heroActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+    heroButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 14,
+      gap: 6,
+      backgroundColor: colors.heroButton,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 999,
+    },
+    heroIconButton: {
+      backgroundColor: colors.heroButton,
+      paddingHorizontal: 11,
+      paddingVertical: 9,
+      borderRadius: 999,
+      marginLeft: 'auto',
+    },
+    heroButtonText: { fontSize: 13, fontWeight: '600', color: colors.heroText },
+
+    card: {
       backgroundColor: colors.surface,
-      borderRadius: 16,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: colors.border,
       padding: 16,
-      marginBottom: 22,
     },
+    cardEyebrow: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 2,
+    },
+    cardSubtitle: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+
+    streakTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
     streakIconWrap: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
       backgroundColor: colors.surfaceAlt,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    streakCount: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 3 },
-    streakSubtitle: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-    sectionLabel: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: colors.primary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginBottom: 10,
+    streakCount: { fontSize: 19, fontWeight: '800', color: colors.textPrimary, marginBottom: 2 },
+    week: { flexDirection: 'row', justifyContent: 'space-between' },
+    weekDay: { alignItems: 'center', gap: 6 },
+    weekDot: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    verseCard: {
+    weekDotDone: { backgroundColor: colors.streak },
+    weekDotToday: { borderWidth: 2, borderColor: colors.streak },
+    weekLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+    weekLabelToday: { color: colors.textPrimary, fontWeight: '800' },
+
+    continueCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    continueIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: colors.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    continueTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+
+    shortcuts: { flexDirection: 'row', gap: 10 },
+    shortcut: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 16,
       backgroundColor: colors.surface,
-      borderRadius: 16,
+      borderRadius: 18,
       borderWidth: 1,
       borderColor: colors.border,
-      padding: 18,
-      marginBottom: 22,
     },
-    verseRef: { fontSize: 14, fontWeight: '700', color: colors.primary, marginBottom: 8 },
-    verseText: {
-      fontSize: 17,
-      lineHeight: 25,
-      color: colors.textPrimary,
-      fontStyle: 'italic',
-      marginBottom: 14,
-    },
-    verseActions: {
-      flexDirection: 'row',
-      gap: 20,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
-      paddingTop: 12,
-    },
-    verseAction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    verseActionText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+    shortcutLabel: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
   });
 }
