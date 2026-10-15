@@ -1,9 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSQLiteContext } from 'expo-sqlite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getBookByAbbrev, searchVerses } from '../db/bibleQueries';
 import type { BibleStackParamList } from '../navigation/types';
+import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { BibleVerse } from '../types';
@@ -14,7 +14,7 @@ type Props = NativeStackScreenProps<BibleStackParamList, 'Search'>;
 const SEARCH_DELAY_MS = 300;
 
 export function SearchScreen({ navigation }: Props) {
-  const db = useSQLiteContext();
+  const db = useBibleDb();
   const [term, setTerm] = useState('');
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [loading, setLoading] = useState(false);
