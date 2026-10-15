@@ -4,11 +4,18 @@ import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, View } from '
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { VerseWithBook } from '../db/bibleQueries';
-import { suggestVerses, type VerseSuggestion } from '../suggest/suggestVerses';
+import { suggestVerses, type SuggestionGroup } from '../suggest/suggestVerses';
 import type { ThemeColors } from '../theme';
 
 /** Com menos que isso ainda não dá para entender do que a anotação fala. */
 const MIN_TEXT_LENGTH = 12;
+
+const GROUP_ICONS: Record<SuggestionGroup['kind'], keyof typeof Ionicons.glyphMap> = {
+  theme: 'pricetag-outline',
+  person: 'person-outline',
+  reference: 'link-outline',
+  words: 'text-outline',
+};
 
 interface Props {
   /** Texto analisado: título, conteúdo e, se houver, o versículo da anotação. */
@@ -24,7 +31,7 @@ export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }:
   const db = useBibleDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [suggestions, setSuggestions] = useState<VerseSuggestion[]>([]);
+  const [groups, setGroups] = useState<SuggestionGroup[]>([]);
   const [loading, setLoading] = useState(false);
   // Texto usado na última busca: se a pessoa continuar escrevendo, o botão oferece atualizar.
   const [searchedText, setSearchedText] = useState<string | null>(null);
@@ -33,7 +40,7 @@ export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }:
   // Ao trocar a versão da Bíblia, as sugestões antigas estão em outra versão.
   useEffect(() => {
     request.current += 1;
-    setSuggestions([]);
+    setGroups([]);
     setSearchedText(null);
     setLoading(false);
   }, [db]);
@@ -49,21 +56,27 @@ export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }:
     const current = ++request.current;
     setLoading(true);
     try {
-      const rows = await suggestVerses(db, text, { exclude, limit: 6 });
+      const found = await suggestVerses(db, text, { exclude });
       // Uma busca antiga que termina depois não pode substituir a mais recente.
       if (current !== request.current) return;
-      setSuggestions(rows);
+      setGroups(found);
       setSearchedText(text);
     } catch {
-      if (current === request.current) setSuggestions([]);
+      if (current === request.current) setGroups([]);
     } finally {
       if (current === request.current) setLoading(false);
     }
   }
 
-  const visible = suggestions
-    .filter(({ verse }) => !citedText.includes(`${verse.book_name} ${verse.chapter}:${verse.verse}`))
-    .slice(0, 5);
+  // Versículos que a pessoa já inseriu saem da lista; grupos que ficarem vazios somem.
+  const visible = groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        ({ verse }) => !citedText.includes(`${verse.book_name} ${verse.chapter}:${verse.verse}`)
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const showButton = !searched || outdated || loading;
 
@@ -109,30 +122,34 @@ export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }:
         </Text>
       ) : null}
 
-      {visible.map(({ verse, reason }) => (
-        <Pressable key={verse.id} style={styles.card} onPress={() => onOpen(verse)}>
-          <View style={styles.cardTop}>
-            <Text style={styles.ref}>
-              {verse.book_name} {verse.chapter}:{verse.verse}
-            </Text>
-            <Text style={styles.reason} numberOfLines={1}>
-              {reason}
-            </Text>
+      {visible.map((group) => (
+        <View key={group.key} style={styles.group}>
+          <View style={styles.groupHeader}>
+            <Ionicons name={GROUP_ICONS[group.kind]} size={14} color={colors.textSecondary} />
+            <Text style={styles.groupTitle}>{group.title}</Text>
           </View>
-          <Text style={styles.verseText} numberOfLines={3}>
-            {verse.text}
-          </Text>
-          <View style={styles.actions}>
-            <Pressable style={styles.action} onPress={() => onInsert(verse)} hitSlop={6}>
-              <Ionicons name="add-circle-outline" size={17} color={colors.primary} />
-              <Text style={styles.actionText}>Inserir na anotação</Text>
+          {group.items.map(({ verse, detail }) => (
+            <Pressable key={verse.id} style={styles.card} onPress={() => onOpen(verse)}>
+              <Text style={styles.ref}>
+                {verse.book_name} {verse.chapter}:{verse.verse}
+              </Text>
+              {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+              <Text style={styles.verseText} numberOfLines={3}>
+                {verse.text}
+              </Text>
+              <View style={styles.actions}>
+                <Pressable style={styles.action} onPress={() => onInsert(verse)} hitSlop={6}>
+                  <Ionicons name="add-circle-outline" size={17} color={colors.primary} />
+                  <Text style={styles.actionText}>Inserir na anotação</Text>
+                </Pressable>
+                <Pressable style={styles.action} onPress={() => onOpen(verse)} hitSlop={6}>
+                  <Ionicons name="book-outline" size={16} color={colors.textSecondary} />
+                  <Text style={[styles.actionText, styles.actionTextMuted]}>Ler</Text>
+                </Pressable>
+              </View>
             </Pressable>
-            <Pressable style={styles.action} onPress={() => onOpen(verse)} hitSlop={6}>
-              <Ionicons name="book-outline" size={16} color={colors.textSecondary} />
-              <Text style={[styles.actionText, styles.actionTextMuted]}>Ler</Text>
-            </Pressable>
-          </View>
-        </Pressable>
+          ))}
+        </View>
       ))}
     </View>
   );
@@ -179,20 +196,11 @@ function createStyles(colors: ThemeColors) {
       padding: 14,
       gap: 6,
     },
-    cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    ref: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
-    reason: {
-      flexShrink: 1,
-      marginLeft: 'auto',
-      fontSize: 11,
-      fontWeight: '600',
-      color: colors.primary,
-      backgroundColor: colors.surfaceAlt,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
-      overflow: 'hidden',
-    },
+    group: { gap: 8, marginTop: 4 },
+    groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    groupTitle: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.textPrimary },
+    ref: { fontSize: 14, fontWeight: '700', color: colors.primary },
+    detail: { fontSize: 12, fontStyle: 'italic', color: colors.textSecondary },
     verseText: { fontSize: 14, lineHeight: 20, color: colors.textSecondary },
     actions: { flexDirection: 'row', gap: 18, marginTop: 4 },
     action: { flexDirection: 'row', alignItems: 'center', gap: 5 },
