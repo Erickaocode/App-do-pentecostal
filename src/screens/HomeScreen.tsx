@@ -5,7 +5,7 @@ import { useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getBookByAbbrev, getVerseBySeed } from '../db/bibleQueries';
+import { getBookByAbbrev, getDailyVerse } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
 import {
   addFavorite,
@@ -32,7 +32,7 @@ let verseOfDayCache: { day: string; value: VerseOfDay | null } | null = null;
 
 async function loadVerseOfDay(db: SQLiteDatabase, day: string): Promise<VerseOfDay | null> {
   if (verseOfDayCache?.day === day) return verseOfDayCache.value;
-  const verse = await getVerseBySeed(db, day);
+  const verse = await getDailyVerse(db, day);
   let value: VerseOfDay | null = null;
   if (verse) {
     const book = await getBookByAbbrev(db, verse.book_abbrev);

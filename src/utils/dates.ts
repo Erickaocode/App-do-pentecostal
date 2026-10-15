@@ -30,11 +30,8 @@ export function greeting(hour: number = new Date().getHours()): string {
   return 'Boa noite';
 }
 
-/** Hash simples e determinístico (FNV-1a like) usado para escolher o versículo do dia. */
-export function hashString(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-  return hash;
+/** Número de dias desde 01/01/1970 para uma chave `AAAA-MM-DD`: avança 1 a cada dia. */
+export function dayNumber(key: string): number {
+  const [y, m, d] = key.split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
 }
