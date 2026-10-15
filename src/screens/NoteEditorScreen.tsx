@@ -3,7 +3,6 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   AppState,
   KeyboardAvoidingView,
   Pressable,
@@ -19,6 +18,7 @@ import type { NotesStackParamList } from '../navigation/types';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { Note, VerseRef } from '../types';
+import { confirmAction, showMessage } from '../utils/dialogs';
 
 type Props = NativeStackScreenProps<NotesStackParamList, 'NoteEditor'>;
 
@@ -158,29 +158,26 @@ export function NoteEditorScreen({ route, navigation }: Props) {
 
   async function handleSave() {
     if (!content.trim()) {
-      Alert.alert('Escreva algo', 'A anotação não pode ficar vazia.');
+      showMessage('Escreva algo', 'A anotação não pode ficar vazia.');
       return;
     }
     await persist();
     navigation.goBack();
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!noteId) return;
-    Alert.alert('Excluir anotação', 'Tem certeza que deseja excluir esta anotação?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          deletedRef.current = true;
-          if (timerRef.current) clearTimeout(timerRef.current);
-          await saveChainRef.current;
-          await deleteNote(db, noteId);
-          navigation.goBack();
-        },
-      },
-    ]);
+    const confirmed = await confirmAction({
+      title: 'Excluir anotação',
+      message: 'Tem certeza que deseja excluir esta anotação?',
+      confirmText: 'Excluir',
+    });
+    if (!confirmed) return;
+    deletedRef.current = true;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    await saveChainRef.current;
+    await deleteNote(db, noteId);
+    navigation.goBack();
   }
 
   useLayoutEffect(() => {
