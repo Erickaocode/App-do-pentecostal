@@ -1,10 +1,11 @@
 import * as SQLite from 'expo-sqlite';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { bibleVersions, defaultBibleVersion, findBibleVersion, type BibleVersion } from '../bible/versions';
 import { useUserDb } from '../db/UserDbProvider';
 import { getSetting, setSetting } from '../db/userQueries';
 import { colors } from '../theme';
+import { showMessage } from '../utils/dialogs';
 
 const SETTING_KEY = 'bibleVersion';
 
@@ -80,7 +81,7 @@ export function BibleProvider({
         setCurrent({ version, db });
         await setSetting(userDb, SETTING_KEY, version.id);
       } catch {
-        Alert.alert('Não foi possível abrir esta versão', 'Tente novamente.');
+        showMessage('Não foi possível abrir esta versão', 'Tente novamente.');
       }
     },
     [userDb, open]

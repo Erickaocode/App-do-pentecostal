@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBookByAbbrev, getDailyVerse } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import type { HomeStackParamList } from '../navigation/types';
 import type { ThemeColors } from '../theme';
 import type { BibleVerse, VerseRef } from '../types';
+import { showMessage } from '../utils/dialogs';
 import { computeStreak, dateKey, greeting, lastSevenDays, longDate } from '../utils/dates';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
@@ -129,19 +130,29 @@ export function HomeScreen({ navigation }: Props) {
       }
     } catch {
       setIsFavorite(wasFavorite);
-      Alert.alert('Não foi possível salvar', 'Tente novamente.');
+      showMessage('Não foi possível salvar', 'Tente novamente.');
     }
   }
 
   async function handleShare() {
     const ref = verseRef();
     if (!ref) return;
+    const message = `“${ref.text}”\n${ref.bookName} ${ref.chapter}:${ref.verse} (${version.short})`;
+    // No app desktop e em navegadores de computador não existe a janela de compartilhar:
+    // copia o versículo para a área de transferência.
+    if (Platform.OS === 'web' && !navigator.share) {
+      try {
+        await navigator.clipboard.writeText(message);
+        showMessage('Versículo copiado', 'Agora é só colar onde quiser compartilhar.');
+      } catch {
+        showMessage('Não foi possível copiar', 'Tente novamente.');
+      }
+      return;
+    }
     try {
-      await Share.share({
-        message: `“${ref.text}”\n${ref.bookName} ${ref.chapter}:${ref.verse} (${version.short})`,
-      });
+      await Share.share({ message });
     } catch {
-      // Navegadores sem suporte a compartilhamento: não há o que fazer além de ignorar.
+      // A pessoa fechou a janela de compartilhar sem escolher nada.
     }
   }
 

@@ -2,13 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { listFavorites, removeFavorite } from '../db/userQueries';
 import type { FavoritesStackParamList } from '../navigation/types';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { Favorite } from '../types';
+import { confirmAction } from '../utils/dialogs';
 
 type Props = NativeStackScreenProps<FavoritesStackParamList, 'FavoritesList'>;
 
@@ -29,6 +30,12 @@ export function FavoritesListScreen({ navigation }: Props) {
   );
 
   async function handleRemove(fav: Favorite) {
+    const confirmed = await confirmAction({
+      title: 'Remover favorito',
+      message: 'Deseja remover este versículo dos favoritos?',
+      confirmText: 'Remover',
+    });
+    if (!confirmed) return;
     await removeFavorite(db, fav.book_abbrev, fav.chapter, fav.verse);
     reload();
   }
@@ -64,15 +71,7 @@ export function FavoritesListScreen({ navigation }: Props) {
               <Text style={styles.cardRef}>
                 {item.book_name} {item.chapter}:{item.verse}
               </Text>
-              <Pressable
-                hitSlop={10}
-                onPress={() =>
-                  Alert.alert('Remover favorito', 'Deseja remover este versículo dos favoritos?', [
-                    { text: 'Cancelar', style: 'cancel' },
-                    { text: 'Remover', style: 'destructive', onPress: () => handleRemove(item) },
-                  ])
-                }
-              >
+              <Pressable hitSlop={10} onPress={() => handleRemove(item)}>
                 <Ionicons name="heart" size={20} color={colors.danger} />
               </Pressable>
             </View>
