@@ -30,6 +30,28 @@ export function greeting(hour: number = new Date().getHours()): string {
   return 'Boa noite';
 }
 
+const WEEKDAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+const MONTHS = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
+/** Ex: "Quinta-feira, 15 de outubro". */
+export function longDate(date: Date = new Date()): string {
+  const weekday = WEEKDAYS[date.getDay()];
+  return `${weekday[0].toUpperCase()}${weekday.slice(1)}, ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
+}
+
+/** Os últimos 7 dias terminando em `today`, com a inicial do dia da semana (D, S, T...). */
+export function lastSevenDays(today: string = dateKey()): { key: string; initial: string }[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const key = addDaysToKey(today, i - 6);
+    const [y, m, d] = key.split('-').map(Number);
+    const weekday = WEEKDAYS[new Date(y, m - 1, d).getDay()];
+    return { key, initial: weekday[0].toUpperCase() };
+  });
+}
+
 /** Número de dias desde 01/01/1970 para uma chave `AAAA-MM-DD`: avança 1 a cada dia. */
 export function dayNumber(key: string): number {
   const [y, m, d] = key.split('-').map(Number);
