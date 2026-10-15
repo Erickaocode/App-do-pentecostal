@@ -6,7 +6,6 @@ export type HomeStackParamList = {
 
 export type BibleStackParamList = {
   Books: undefined;
-  Chapters: { bookAbbrev: string; bookName: string; chapterCount: number };
   Reading: { bookAbbrev: string; bookName: string; chapter: number; focusVerse?: number };
   Search: undefined;
 };
