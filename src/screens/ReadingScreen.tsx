@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getBookByAbbrev, getChapterVerses } from '../db/bibleQueries';
 import {
   addFavorite,
@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { highlightColorValue, highlightTextColor } from '../theme';
 import type { ThemeColors } from '../theme';
 import type { BibleVerse, Highlight, VerseRef } from '../types';
+import { showMessage } from '../utils/dialogs';
 
 type Props = NativeStackScreenProps<BibleStackParamList, 'Reading'>;
 
@@ -163,7 +164,7 @@ export function ReadingScreen({ route, navigation }: Props) {
       }
     } catch {
       setSelectedIsFavorite(wasFavorite);
-      Alert.alert('Não foi possível salvar', 'Tente novamente.');
+      showMessage('Não foi possível salvar', 'Tente novamente.');
     }
   }
 
@@ -184,7 +185,7 @@ export function ReadingScreen({ route, navigation }: Props) {
         await removeHighlight(userDb, bookAbbrev, chapter, verse);
       }
     } catch {
-      Alert.alert('Não foi possível salvar o destaque', 'Tente novamente.');
+      showMessage('Não foi possível salvar o destaque', 'Tente novamente.');
     }
     // Invalida qualquer leitura iniciada antes desta gravação e confirma o estado real.
     loadHighlights();
