@@ -88,8 +88,17 @@ export function ReadingScreen({ route, navigation }: Props) {
     }, [loadHighlights])
   );
 
+  // Última posição para a qual a lista já rolou: trocar de versão recarrega os versículos
+  // do mesmo capítulo, e isso não deve tirar a pessoa do ponto em que estava lendo.
+  const scrolledTo = useRef<string | null>(null);
+
   useEffect(() => {
     if (verses.length === 0) return;
+    // Ainda são os versículos do capítulo anterior: espera os novos chegarem.
+    if (verses[0].book_abbrev !== bookAbbrev || verses[0].chapter !== chapter) return;
+    const target = `${bookAbbrev}:${chapter}:${focusVerse ?? ''}`;
+    if (scrolledTo.current === target) return;
+    scrolledTo.current = target;
     if (!focusVerse) {
       // Capítulo novo começa do topo, não na posição de rolagem do anterior.
       listRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -101,7 +110,7 @@ export function ReadingScreen({ route, navigation }: Props) {
       listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.2 });
     }, 200);
     return () => clearTimeout(timer);
-  }, [focusVerse, verses]);
+  }, [bookAbbrev, chapter, focusVerse, verses]);
 
   // Versículos longe do topo ainda não foram medidos pela FlatList: rola até a altura
   // estimada para renderizá-los e tenta de novo.
