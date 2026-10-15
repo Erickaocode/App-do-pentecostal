@@ -11,6 +11,7 @@ import {
   listHighlightsForChapter,
   removeFavorite,
   removeHighlight,
+  saveLastReading,
   setHighlight,
 } from '../db/userQueries';
 import { useUserDb } from '../db/UserDbProvider';
@@ -54,6 +55,11 @@ export function ReadingScreen({ route, navigation }: Props) {
       cancelled = true;
     };
   }, [db, bookAbbrev, chapter]);
+
+  // Alimenta o "Continuar lendo" da tela Início.
+  useEffect(() => {
+    saveLastReading(userDb, { bookAbbrev, bookName, chapter }).catch(() => {});
+  }, [userDb, bookAbbrev, bookName, chapter]);
 
   // Contador de leituras: só a resposta da leitura mais recente é aplicada.
   const highlightsRequest = useRef(0);
