@@ -198,6 +198,7 @@ export function ReadingScreen({ route, navigation }: Props) {
     navigation.getParent<any>()?.navigate('AnotacoesTab', {
       screen: 'NoteEditor',
       params: { prefill: ref },
+      initial: false,
     });
   }
 

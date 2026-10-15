@@ -162,7 +162,7 @@ export function HomeScreen({ navigation }: Props) {
     chapter: number;
     focusVerse?: number;
   }) {
-    navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Reading', params });
+    navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Reading', params, initial: false });
   }
 
   function openVerseOfDay() {
@@ -185,13 +185,17 @@ export function HomeScreen({ navigation }: Props) {
     {
       icon: 'search' as const,
       label: 'Buscar',
-      onPress: () => navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Search' }),
+      onPress: () => navigation.getParent<any>()?.navigate('BibliaTab', { screen: 'Search', initial: false }),
     },
     {
       icon: 'create-outline' as const,
       label: 'Anotar',
       onPress: () =>
-        navigation.getParent<any>()?.navigate('AnotacoesTab', { screen: 'NoteEditor', params: {} }),
+        navigation.getParent<any>()?.navigate('AnotacoesTab', {
+          screen: 'NoteEditor',
+          params: {},
+          initial: false,
+        }),
     },
     {
       icon: 'heart-outline' as const,
