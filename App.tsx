@@ -1,9 +1,9 @@
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { SQLiteProvider } from 'expo-sqlite';
-import React, { Suspense, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BibleProvider } from './src/context/BibleContext';
 import { UserDbProvider } from './src/db/UserDbProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
@@ -48,19 +48,14 @@ function ThemedApp() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <Suspense fallback={<LoadingScreen />}>
-        <SQLiteProvider
-          databaseName="blivre.db"
-          assetSource={{ assetId: require('./assets/bible/blivre.db') }}
-          useSuspense
-        >
-          <UserDbProvider fallback={<LoadingScreen />}>
-            <ThemeProvider>
-              <ThemedApp />
-            </ThemeProvider>
-          </UserDbProvider>
-        </SQLiteProvider>
-      </Suspense>
+      {/* A versão da Bíblia escolhida fica salva nos dados da pessoa, então o banco dela vem primeiro. */}
+      <UserDbProvider fallback={<LoadingScreen />}>
+        <BibleProvider fallback={<LoadingScreen />}>
+          <ThemeProvider>
+            <ThemedApp />
+          </ThemeProvider>
+        </BibleProvider>
+      </UserDbProvider>
     </SafeAreaProvider>
   );
 }
