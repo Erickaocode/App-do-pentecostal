@@ -12,6 +12,11 @@ export interface ThemeColors {
   streak: string;
   testamentAT: string;
   testamentNT: string;
+  /** Card de destaque da tela Início (versículo do dia). */
+  heroBackground: string;
+  heroText: string;
+  heroMuted: string;
+  heroButton: string;
 }
 
 export const lightColors: ThemeColors = {
@@ -28,6 +33,10 @@ export const lightColors: ThemeColors = {
   streak: '#D9711D',
   testamentAT: '#7A4B2A',
   testamentNT: '#3D6E5C',
+  heroBackground: '#6B3F22',
+  heroText: '#FFF8EE',
+  heroMuted: '#E6CBA8',
+  heroButton: 'rgba(255, 248, 238, 0.14)',
 };
 
 export const darkColors: ThemeColors = {
@@ -44,6 +53,10 @@ export const darkColors: ThemeColors = {
   streak: '#F0922E',
   testamentAT: '#D9A45C',
   testamentNT: '#7FBFA3',
+  heroBackground: '#3A2819',
+  heroText: '#F7EBD8',
+  heroMuted: '#D9A45C',
+  heroButton: 'rgba(247, 235, 216, 0.10)',
 };
 
 /** Cor de texto usada em versículos destacados: o fundo do destaque é sempre um tom pastel claro, em qualquer tema. */
