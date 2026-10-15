@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSQLiteContext } from 'expo-sqlite';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { getBooks } from '../db/bibleQueries';
 import type { BibleStackParamList } from '../navigation/types';
+import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { BibleBook } from '../types';
@@ -12,7 +12,7 @@ import type { BibleBook } from '../types';
 type Props = NativeStackScreenProps<BibleStackParamList, 'Books'>;
 
 export function BooksScreen({ navigation }: Props) {
-  const db = useSQLiteContext();
+  const db = useBibleDb();
   const [books, setBooks] = useState<BibleBook[]>([]);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
