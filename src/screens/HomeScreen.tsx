@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import {
   removeFavorite,
   type LastReading,
 } from '../db/userQueries';
+import { useBible } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { HomeStackParamList } from '../navigation/types';
 import type { ThemeColors } from '../theme';
@@ -29,18 +30,26 @@ interface VerseOfDay {
   bookName: string;
 }
 
-/** O versículo do dia só muda à meia-noite: guarda em memória para não consultar a Bíblia toda vez que a aba ganha foco. */
-let verseOfDayCache: { day: string; value: VerseOfDay | null } | null = null;
+/**
+ * O versículo do dia só muda à meia-noite ou ao trocar de versão: guarda em memória para
+ * não consultar a Bíblia toda vez que a aba ganha foco.
+ */
+let verseOfDayCache: { key: string; value: VerseOfDay | null } | null = null;
 
-async function loadVerseOfDay(db: SQLiteDatabase, day: string): Promise<VerseOfDay | null> {
-  if (verseOfDayCache?.day === day) return verseOfDayCache.value;
+async function loadVerseOfDay(
+  db: SQLiteDatabase,
+  day: string,
+  versionId: string
+): Promise<VerseOfDay | null> {
+  const key = `${day}:${versionId}`;
+  if (verseOfDayCache?.key === key) return verseOfDayCache.value;
   const verse = await getDailyVerse(db, day);
   let value: VerseOfDay | null = null;
   if (verse) {
     const book = await getBookByAbbrev(db, verse.book_abbrev);
     value = { verse, bookName: book?.name ?? verse.book_abbrev };
   }
-  verseOfDayCache = { day, value };
+  verseOfDayCache = { key, value };
   return value;
 }
 
@@ -54,7 +63,7 @@ function streakMessage(streak: number): string {
 }
 
 export function HomeScreen({ navigation }: Props) {
-  const db = useSQLiteContext();
+  const { db, version } = useBible();
   const userDb = useUserDb();
   const { colors, scheme, toggleScheme } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -75,7 +84,7 @@ export function HomeScreen({ navigation }: Props) {
       setActiveDays(new Set(dates));
       setLastReading(reading);
 
-      const today = await loadVerseOfDay(db, dateKey());
+      const today = await loadVerseOfDay(db, dateKey(), version.id);
       if (!isActive() || !today) return;
       setVerseOfDay(today);
       // O favorito pode ter mudado em outra aba, então este sempre é relido.
@@ -83,7 +92,7 @@ export function HomeScreen({ navigation }: Props) {
       const fav = await queryIsFavorite(userDb, verse.book_abbrev, verse.chapter, verse.verse);
       if (isActive()) setIsFavorite(!!fav);
     },
-    [db, userDb]
+    [db, userDb, version.id]
   );
 
   useFocusEffect(
@@ -129,7 +138,7 @@ export function HomeScreen({ navigation }: Props) {
     if (!ref) return;
     try {
       await Share.share({
-        message: `“${ref.text}”\n${ref.bookName} ${ref.chapter}:${ref.verse}`,
+        message: `“${ref.text}”\n${ref.bookName} ${ref.chapter}:${ref.verse} (${version.short})`,
       });
     } catch {
       // Navegadores sem suporte a compartilhamento: não há o que fazer além de ignorar.
@@ -211,6 +220,7 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.heroText}>{verseOfDay.verse.text}</Text>
           <Text style={styles.heroRef}>
             {verseOfDay.bookName} {verseOfDay.verse.chapter}:{verseOfDay.verse.verse}
+            <Text style={styles.heroVersion}>  ·  {version.short}</Text>
           </Text>
           <View style={styles.heroActions}>
             <Pressable style={styles.heroButton} onPress={handleToggleFavorite} hitSlop={6}>
@@ -353,6 +363,7 @@ function createStyles(colors: ThemeColors) {
       marginBottom: 14,
     },
     heroRef: { fontSize: 15, fontWeight: '700', color: colors.heroMuted, marginBottom: 20 },
+    heroVersion: { fontSize: 12, fontWeight: '600', letterSpacing: 0.5 },
     heroActions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
     heroButton: {
       flexDirection: 'row',
