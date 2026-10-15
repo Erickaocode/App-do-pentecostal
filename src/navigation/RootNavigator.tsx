@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
+import { VersionPicker } from '../components/VersionPicker';
 import { BooksScreen } from '../screens/BooksScreen';
 import { ChaptersScreen } from '../screens/ChaptersScreen';
 import { FavoritesListScreen } from '../screens/FavoritesListScreen';
@@ -39,6 +40,8 @@ function useStackScreenOptions() {
   );
 }
 
+const renderVersionPicker = () => <VersionPicker />;
+
 function HomeStackNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -51,9 +54,17 @@ function BibleStackNavigator() {
   const stackScreenOptions = useStackScreenOptions();
   return (
     <BibleStack.Navigator screenOptions={stackScreenOptions}>
-      <BibleStack.Screen name="Books" component={BooksScreen} options={{ title: 'Bíblia' }} />
+      <BibleStack.Screen
+        name="Books"
+        component={BooksScreen}
+        options={{ title: 'Bíblia', headerRight: renderVersionPicker }}
+      />
       <BibleStack.Screen name="Chapters" component={ChaptersScreen} />
-      <BibleStack.Screen name="Reading" component={ReadingScreen} />
+      <BibleStack.Screen
+        name="Reading"
+        component={ReadingScreen}
+        options={{ headerRight: renderVersionPicker }}
+      />
       <BibleStack.Screen name="Search" component={SearchScreen} options={{ title: 'Buscar' }} />
     </BibleStack.Navigator>
   );
