@@ -21,6 +21,30 @@ export async function setSetting(db: SQLiteDatabase, key: string, value: string)
   );
 }
 
+// ---------- Última leitura ----------
+
+const LAST_READING_KEY = 'lastReading';
+
+export interface LastReading {
+  bookAbbrev: string;
+  bookName: string;
+  chapter: number;
+}
+
+export async function getLastReading(db: SQLiteDatabase): Promise<LastReading | null> {
+  const value = await getSetting(db, LAST_READING_KEY);
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as LastReading;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastReading(db: SQLiteDatabase, reading: LastReading): Promise<void> {
+  return setSetting(db, LAST_READING_KEY, JSON.stringify(reading));
+}
+
 // ---------- Atividade / sequência de dias ----------
 
 export async function recordTodayActivity(db: SQLiteDatabase): Promise<void> {
