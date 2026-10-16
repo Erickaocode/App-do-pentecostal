@@ -138,6 +138,25 @@
   .feature strong { display: block; font-size: 15px; margin-bottom: 4px; color: var(--text); }
   .feature span { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
 
+  .version {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: -12px 0 16px;
+  }
+  .whats-new {
+    margin: 0 auto 40px;
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .whats-new h2 { font-size: 20px; color: var(--primary-dark); margin-bottom: 12px; }
+  .whats-new ul { margin: 0; padding-left: 20px; }
+  .whats-new li { font-size: 14px; line-height: 1.55; color: var(--text-secondary); margin-bottom: 8px; }
+  .whats-new li strong { color: var(--text); }
+  .update-note { font-size: 13px; color: var(--text-secondary); margin: 12px 0 0; }
+
   footer {
     text-align: center;
     padding: 28px 0 40px;
@@ -166,14 +185,16 @@
       <span class="dot p"></span>
     </div>
 
+    <p class="version">Versão 1.3.0 · outubro de 2026</p>
+
     <div class="download-grid">
-      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/desktop-v1.0.0/App-do-Pentecostal-Setup-1.1.0.exe">
+      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/v1.3.0/App-do-Pentecostal-Setup-1.3.0.exe">
         Baixar para Windows <span class="badge">Instalador</span>
       </a>
-      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/desktop-v1.0.0/App-do-Pentecostal-Linux-x64-1.1.0.tar.gz">
+      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/v1.3.0/App-do-Pentecostal-Linux-x64-1.3.0.tar.gz">
         Baixar para Linux <span class="badge">Portátil</span>
       </a>
-      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/android-v1.0.0/App-do-Pentecostal-1.0.0.apk">
+      <a class="btn btn-primary" href="https://github.com/Erickaocode/App-do-pentecostal/releases/download/v1.3.0/App-do-Pentecostal-1.3.0.apk">
         Baixar para Android <span class="badge">APK</span>
       </a>
     </div>
@@ -198,6 +219,19 @@
       Veja também o <a href="../site/index.html">site do app</a>
       ou acompanhe o <a href="https://github.com/Erickaocode/App-do-pentecostal">código no GitHub</a>.
     </p>
+  </div>
+
+  <div class="wrap">
+  <div class="whats-new">
+    <h2>Novidades da versão 1.3.0</h2>
+    <ul>
+      <li><strong>Sugestões de versículos nas anotações:</strong> escreva sobre o que está vivendo, toque em <em>Sugerir versículos</em> e receba passagens agrupadas por assunto. Funciona sem internet.</li>
+      <li><strong>Tela Início renovada:</strong> versículo do dia em destaque, sua semana de leitura e o atalho <em>Continuar lendo</em>.</li>
+      <li><strong>Capítulos em gaveta:</strong> toque num livro e os capítulos abrem logo abaixo, com animação.</li>
+      <li><strong>Correções:</strong> excluir anotações e remover favoritos voltou a funcionar no computador, e as telas abertas pela Início ganharam o botão de voltar.</li>
+    </ul>
+    <p class="update-note">Já tem o app? Instale por cima: seus favoritos, grifos e anotações continuam lá.</p>
+  </div>
   </div>
 
   <div class="features">
@@ -227,6 +261,14 @@
         <div class="feature">
           <strong>Funciona sem internet</strong>
           <span>Seus dados ficam salvos localmente, sem depender de internet para ler.</span>
+        </div>
+        <div class="feature">
+          <strong>Sugestões de versículos</strong>
+          <span>O app lê sua anotação e sugere passagens sobre os assuntos, personagens e referências que você citou.</span>
+        </div>
+        <div class="feature">
+          <strong>Versículo do dia</strong>
+          <span>Uma palavra de encorajamento por dia e a sua sequência de dias de leitura.</span>
         </div>
       </div>
     </div>
