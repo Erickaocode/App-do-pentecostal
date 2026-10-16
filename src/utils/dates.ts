@@ -24,10 +24,24 @@ export function computeStreak(activityKeys: string[], today: string = dateKey())
   return streak;
 }
 
-export function greeting(hour: number = new Date().getHours()): string {
-  if (hour < 12) return 'Bom dia';
-  if (hour < 18) return 'Boa tarde';
-  return 'Boa noite';
+export type DayPeriod = 'madrugada' | 'manha' | 'tarde' | 'noite';
+
+export function dayPeriod(hour: number = new Date().getHours()): DayPeriod {
+  if (hour < 5) return 'madrugada';
+  if (hour < 12) return 'manha';
+  if (hour < 18) return 'tarde';
+  return 'noite';
+}
+
+const GREETINGS: Record<DayPeriod, string> = {
+  madrugada: 'Boa madrugada',
+  manha: 'Bom dia',
+  tarde: 'Boa tarde',
+  noite: 'Boa noite',
+};
+
+export function greeting(period: DayPeriod = dayPeriod()): string {
+  return GREETINGS[period];
 }
 
 const WEEKDAYS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
