@@ -37,7 +37,12 @@
         flex: 1;
       }
     </style>
-  <link rel="icon" href="/App-do-pentecostal/web/app/favicon.ico"/></head>
+  <link rel="icon" href="/App-do-pentecostal/web/app/favicon.ico"/><script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+      }
+    </script>
+  </head>
 
   <body>
     <noscript>
