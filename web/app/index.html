@@ -1,16 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- viewport-fit=cover: no iPhone, o app ocupa a tela inteira (inclusive atrás do entalhe). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <title>App do Pentecostal</title>
+    <meta name="description" content="Leia a Bíblia, grife versículos, favorite e anote suas reflexões, mesmo sem internet." />
+    <meta name="theme-color" content="#FAF6F0" />
+
+    <!-- Instalação como app ("Adicionar à Tela de Início"). Caminhos relativos: o app
+         roda tanto na raiz (computador) quanto em subcaminho (GitHub Pages). -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Pentecostal" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
       html,
       body {
         height: 100%;
+        background-color: #FAF6F0;
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
@@ -26,11 +40,9 @@
   <link rel="icon" href="/App-do-pentecostal/web/app/favicon.ico"/></head>
 
   <body>
-    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript>
-      You need to enable JavaScript to run this app.
+      Ative o JavaScript para usar o App do Pentecostal.
     </noscript>
-    <!-- The root element for your Expo app. -->
     <div id="root"></div>
   <script src="/App-do-pentecostal/web/app/_expo/static/js/web/index-eae693452e428de066f7f0c04444d3f0.js" defer></script>
 </body>
