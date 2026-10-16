@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
@@ -22,7 +22,9 @@ import type { HomeStackParamList } from '../navigation/types';
 import type { ThemeColors } from '../theme';
 import type { BibleVerse, VerseRef } from '../types';
 import { showMessage } from '../utils/dialogs';
-import { computeStreak, dateKey, greeting, lastSevenDays, longDate } from '../utils/dates';
+import { TypewriterPhrases } from '../components/TypewriterPhrases';
+import { phrasesFor } from '../data/shortPhrases';
+import { computeStreak, dateKey, dayPeriod, greeting, lastSevenDays, longDate } from '../utils/dates';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -69,6 +71,8 @@ export function HomeScreen({ navigation }: Props) {
   const { colors, scheme, toggleScheme } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
+  // As frases animadas param quando a pessoa sai da tela Início.
+  const isFocused = useIsFocused();
 
   const [streak, setStreak] = useState(0);
   const [activeDays, setActiveDays] = useState<Set<string>>(new Set());
@@ -205,6 +209,8 @@ export function HomeScreen({ navigation }: Props) {
   ];
 
   const week = lastSevenDays();
+  const period = dayPeriod();
+  const phrases = useMemo(() => phrasesFor(period), [period]);
 
   return (
     <ScrollView
@@ -214,7 +220,10 @@ export function HomeScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={styles.date}>{longDate()}</Text>
-          <Text style={styles.title}>{greeting()}!</Text>
+          {/* Espaço que não quebra em "com Jesus": se faltar lugar, a quebra fica antes do "com". */}
+          <Text style={styles.title}>
+            {greeting(period)} <Text style={styles.titleAccent}>com{' '}Jesus!</Text>
+          </Text>
         </View>
         <Pressable style={styles.themeToggle} onPress={toggleScheme} hitSlop={10}>
           <Ionicons
@@ -224,6 +233,8 @@ export function HomeScreen({ navigation }: Props) {
           />
         </Pressable>
       </View>
+
+      <TypewriterPhrases phrases={phrases} active={isFocused} />
 
       {verseOfDay ? (
         <Pressable style={styles.hero} onPress={openVerseOfDay}>
@@ -334,6 +345,7 @@ function createStyles(colors: ThemeColors) {
       marginBottom: 2,
     },
     title: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
+    titleAccent: { color: colors.primary },
     themeToggle: {
       width: 42,
       height: 42,
