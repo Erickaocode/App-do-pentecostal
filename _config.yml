@@ -1,0 +1,8 @@
+# GitHub Pages (Jekyll): por padrão ele ignora pastas que começam com "_" e as
+# "node_modules". O app web gerado pelo Expo guarda o código em "_expo" e as fontes
+# dos ícones em "assets/node_modules", então as duas precisam entrar.
+include:
+  - _expo
+  - node_modules
+  - web/app/_expo
+  - web/app/assets/node_modules

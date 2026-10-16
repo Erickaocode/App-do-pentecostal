@@ -4,6 +4,8 @@
 node_modules/
 !/web/webapp/assets/node_modules/
 !/web/webapp/assets/node_modules/**
+!/web/app/assets/node_modules/
+!/web/app/assets/node_modules/**
 
 # Expo
 .expo/

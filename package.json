@@ -33,6 +33,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "export:pwa": "node scripts/export-pwa.js",
     "build:android:apk": "npx eas-cli@latest build --platform android --profile preview",
     "build:android:aab": "npx eas-cli@latest build --platform android --profile production",
     "build:ios:simulator": "npx eas-cli@latest build --platform ios --profile ios-simulator",
