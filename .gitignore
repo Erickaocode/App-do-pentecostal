@@ -46,3 +46,8 @@ yarn-error.*
 
 # APK baixado do EAS para anexar no Release
 /release-android/
+
+# Configurações locais de assistentes de código (ficam só na máquina)
+/.claude/
+/CLAUDE.md
+/AGENTS.md
