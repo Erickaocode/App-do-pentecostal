@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SermonTimerPanel } from '../components/SermonTimerPanel';
 import { VerseSuggestions } from '../components/VerseSuggestions';
 import type { VerseWithBook } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
@@ -230,6 +231,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
       behavior="padding"
       keyboardVerticalOffset={headerHeight}
     >
+      <SermonTimerPanel />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}

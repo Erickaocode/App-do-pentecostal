@@ -1,13 +1,22 @@
-import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SermonTimerBadge } from './src/components/SermonTimerBadge';
 import { BibleProvider } from './src/context/BibleContext';
+import { SermonTimerProvider } from './src/context/SermonTimerContext';
 import { UserDbProvider } from './src/db/UserDbProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { colors } from './src/theme';
+
+const navigationRef = createNavigationContainerRef();
 
 function LoadingScreen() {
   return (
@@ -36,12 +45,17 @@ function ThemedApp() {
   );
 
   return (
-    <>
-      <NavigationContainer theme={navigationTheme}>
+    <SermonTimerProvider>
+      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
         <RootNavigator />
       </NavigationContainer>
+      <SermonTimerBadge
+        onPress={() => {
+          if (navigationRef.isReady()) navigationRef.navigate('AnotacoesTab' as never);
+        }}
+      />
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-    </>
+    </SermonTimerProvider>
   );
 }
 
