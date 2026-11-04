@@ -117,6 +117,41 @@ async function handleUpdateCheckRequest() {
 
 ipcMain.handle('check-for-updates', handleUpdateCheckRequest);
 
+// Pedidos ao API Server do Holyrics (rede local). Saem por aqui porque, dentro da
+// janela, o navegador bloquearia a chamada para outro endereço (CORS).
+ipcMain.handle('holyrics-request', (_event, url, body) => {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      reject(new Error('Endereço inválido'));
+      return;
+    }
+    if (parsed.protocol !== 'http:' || !parsed.pathname.startsWith('/api/')) {
+      reject(new Error('Endereço do Holyrics inválido'));
+      return;
+    }
+    const req = http.request(
+      parsed,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        timeout: 5000,
+      },
+      (res) => {
+        let data = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => resolve({ status: res.statusCode || 0, body: data }));
+      }
+    );
+    req.on('timeout', () => req.destroy(new Error('Tempo esgotado')));
+    req.on('error', reject);
+    req.end(body);
+  });
+});
+
 function injectUpdateButton() {
   if (!mainWindow) return;
   mainWindow.webContents
