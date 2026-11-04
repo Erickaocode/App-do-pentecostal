@@ -12,7 +12,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { HolyricsSheet } from '../components/HolyricsSheet';
 import { SermonTimerPanel } from '../components/SermonTimerPanel';
+import { findVerseReferences } from '../holyrics/client';
 import { VerseSuggestions } from '../components/VerseSuggestions';
 import type { VerseWithBook } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
@@ -62,6 +64,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   );
   const [existingNote, setExistingNote] = useState<Note | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [holyricsOpen, setHolyricsOpen] = useState(false);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -216,14 +220,35 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: isEditing ? 'Editar anotação' : 'Nova anotação',
-      headerRight: () =>
-        isEditing ? (
-          <Pressable onPress={handleDelete} hitSlop={10}>
-            <Ionicons name="trash-outline" size={22} color={colors.danger} />
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => setHolyricsOpen(true)}
+            hitSlop={10}
+            accessibilityLabel="Projetar no Holyrics"
+          >
+            <Ionicons name="tv-outline" size={22} color={colors.primary} />
           </Pressable>
-        ) : null,
+          {isEditing ? (
+            <Pressable onPress={handleDelete} hitSlop={10} accessibilityLabel="Excluir anotação">
+              <Ionicons name="trash-outline" size={22} color={colors.danger} />
+            </Pressable>
+          ) : null}
+        </View>
+      ),
     });
-  }, [navigation, isEditing, existingNote, colors]);
+  }, [navigation, isEditing, existingNote, colors, styles]);
+
+  const holyricsVerseRefs = useMemo(
+    () =>
+      findVerseReferences(
+        content,
+        verseRef ? `${verseRef.bookName} ${verseRef.chapter}:${verseRef.verse}` : null
+      ),
+    [content, verseRef]
+  );
+  const selectedText =
+    selection.end > selection.start ? content.slice(selection.start, selection.end) : '';
 
   return (
     <KeyboardAvoidingView
@@ -259,6 +284,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           placeholderTextColor={colors.textSecondary}
           value={content}
           onChangeText={setContent}
+          onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
           multiline
           textAlignVertical="top"
         />
@@ -285,6 +311,13 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           <Text style={styles.saveButtonText}>Salvar</Text>
         </Pressable>
       </ScrollView>
+
+      <HolyricsSheet
+        visible={holyricsOpen}
+        onClose={() => setHolyricsOpen(false)}
+        verseRefs={holyricsVerseRefs}
+        selectedText={selectedText}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -292,6 +325,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
+    headerActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
     content: { padding: 16, paddingBottom: 40 },
     verseBanner: {
       backgroundColor: colors.surface,
