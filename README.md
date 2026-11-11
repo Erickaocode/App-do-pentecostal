@@ -104,7 +104,7 @@ app/
 │   ├── webapp/            # Build web do computador (usado pelo app desktop)
 │   ├── app/               # App web do iPhone (gerado por npm run export:pwa)
 │   ├── landing/           # Página de download
-│   ├── site/              # Página de apresentação
+│   ├── site/              # Site demonstrativo (sem downloads, com contato)
 │   └── privacidade/       # Política de privacidade
 ├── desktop/               # App Electron (Windows, macOS, Linux)
 └── store/                 # Textos e imagens da Play Store e da App Store
@@ -221,7 +221,7 @@ Faça commit da pasta `web/app` atualizada. Sem esse passo, quem usa o iPhone co
 <details>
 <summary><b>📥 Página de download</b></summary>
 
-Depois de criar a release no GitHub com os arquivos (APK, instalador do Windows e pacote do Linux), atualize os links da nova versão em [`web/landing/index.html`](web/landing/index.html) e [`web/site/index.html`](web/site/index.html). Atualize os links só depois que a release existir, para eles não ficarem quebrados.
+Depois de criar a release no GitHub com os arquivos (APK, instalador do Windows e pacote do Linux), atualize os links da nova versão em [`web/landing/index.html`](web/landing/index.html). O site de apresentação ([`web/site`](web/site/index.html)) é só demonstrativo e não tem links de download. Atualize os links só depois que a release existir, para eles não ficarem quebrados.
 
 </details>
 
