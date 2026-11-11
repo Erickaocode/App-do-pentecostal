@@ -60,11 +60,18 @@ function pickAssetUrl(release) {
   return release.html_url;
 }
 
+function hasDesktopAsset(release) {
+  return (release.assets || []).some((a) => /\.(exe|tar\.gz)$/i.test(a.name));
+}
+
 async function checkForUpdates() {
   const releases = await fetchJson(RELEASES_URL);
+  // Aceita as tags antigas (desktop-v1.0.0) e as atuais (v1.4.0). Nas tags vX.Y.Z só
+  // conta a release que traz o instalador do computador (.exe ou .tar.gz).
   const desktopReleases = releases
-    .filter((r) => typeof r.tag_name === 'string' && /^desktop-v/.test(r.tag_name))
-    .map((r) => ({ ...r, version: r.tag_name.replace('desktop-v', '') }))
+    .filter((r) => typeof r.tag_name === 'string' && !r.draft && !r.prerelease)
+    .filter((r) => /^desktop-v\d/.test(r.tag_name) || (/^v\d/.test(r.tag_name) && hasDesktopAsset(r)))
+    .map((r) => ({ ...r, version: r.tag_name.replace(/^(desktop-)?v/, '') }))
     .sort((a, b) => (isNewerVersion(a.version, b.version) ? -1 : 1));
 
   const latest = desktopReleases[0];
