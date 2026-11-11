@@ -211,10 +211,10 @@ Faça commit da pasta `web/app` atualizada. Sem esse passo, quem usa o iPhone co
    npm run dist        # plataforma atual
    ```
 
-4. Crie uma release no GitHub com a tag **`desktop-vX.Y.Z`** (ex.: `desktop-v1.2.0`) e anexe o instalador e o `.blockmap`.
+4. Crie uma release no GitHub com a tag **`vX.Y.Z`** (ex.: `v1.4.0`) e anexe o instalador do Windows (`.exe`) e o pacote do Linux (`.tar.gz`).
 
 > [!IMPORTANT]
-> O app desktop procura atualizações nas releases com tag `desktop-v…`. Se a tag tiver outro formato, quem já tem o app instalado não é avisado da nova versão.
+> O app desktop procura atualizações nas releases com tag `v…` que trazem o `.exe` ou o `.tar.gz` (as tags antigas `desktop-v…` também valem). Sem esses arquivos na release, quem já tem o app instalado não é avisado da nova versão.
 
 </details>
 
