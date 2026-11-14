@@ -6,7 +6,7 @@
 
 **Leia a Bíblia, grife versículos, favorite e anote suas reflexões, sem internet.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.0-E8590C)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.5.0-E8590C)
 
 ![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white)
@@ -45,7 +45,7 @@ Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você m
 | 🔎 | **Busca por palavras** | Digite um trecho e encontre o versículo na hora |
 | 🖍️ | **Grifos coloridos** | Destaque versículos em amarelo, verde, azul ou rosa |
 | ❤️ | **Favoritos** | Guarde os versículos preferidos para reler quando quiser |
-| 📝 | **Anotações** | Escreva reflexões ligadas a cada versículo, salvas automaticamente enquanto você digita |
+| 📝 | **Anotações** | Escreva reflexões ligadas a cada versículo, salvas automaticamente enquanto você digita, com formatação no estilo do bloco de notas do iPhone: negrito, itálico, Título, Cabeçalho, listas, lista de tarefas, citação, cores e tabelas |
 | 💡 | **Sugestões de versículos** | No editor de anotações, um toque sugere versículos ligados ao que você escreveu, agrupados por assunto (temas, personagens bíblicos e referências citadas no texto) |
 | ⏱️ | **Cronômetro de pregação** | Tempos prontos para saudação e pregação (5, 15, 30 min ou 1 hora), aviso no último minuto e tela sempre acesa; aparece também dentro das anotações |
 | 📺 | **Holyrics** | Conecte ao Holyrics do computador da igreja e projete os versículos da anotação ou um texto livre, com botões de voltar, avançar e fechar |
