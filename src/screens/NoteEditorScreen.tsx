@@ -77,6 +77,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [holyricsOpen, setHolyricsOpen] = useState(false);
   const [editorFocused, setEditorFocused] = useState(false);
+  const [formatPanelOpen, setFormatPanelOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [formats, setFormats] = useState<EditorFormats | null>(null);
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
@@ -329,12 +330,11 @@ export function NoteEditorScreen({ route, navigation }: Props) {
             style: { flex: 1, backgroundColor: colors.background },
             containerStyle: { flex: 1 },
             hideKeyboardAccessoryView: true,
-            keyboardDisplayRequiresUserAction: false,
           }}
         />
       </View>
 
-      {!editorFocused ? (
+      {!editorFocused && !formatPanelOpen ? (
         <ScrollView
           style={styles.footer}
           contentContainerStyle={styles.footerContent}
@@ -368,6 +368,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         formats={formats}
         editorFocused={editorFocused}
         onCommand={handleCommand}
+        onPanelChange={setFormatPanelOpen}
       />
 
       <HolyricsSheet
