@@ -241,7 +241,23 @@ export default function RichNoteEditor({
   function insertTable() {
     const cell = '<td><br></td>';
     const row = `<tr>${cell}${cell}</tr>`;
-    document.execCommand('insertHTML', false, `<table>${row}${row}</table><div><br></div>`);
+    document.execCommand(
+      'insertHTML',
+      false,
+      `<table data-new="1">${row}${row}</table><div><br></div>`
+    );
+    // Coloca o cursor na primeira célula da tabela nova.
+    const table = editorRef.current?.querySelector('table[data-new]');
+    if (!table) return;
+    table.removeAttribute('data-new');
+    const first = table.querySelector('td');
+    const sel = window.getSelection();
+    if (!first || !sel) return;
+    const range = document.createRange();
+    range.setStart(first, 0);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
   function tableAction(action: 'tableRow' | 'tableCol' | 'tableDelete') {
@@ -407,6 +423,36 @@ export default function RichNoteEditor({
       event.preventDefault();
       document.execCommand('insertText', false, text);
     };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const sel = selectionInEditor();
+      const node = sel?.anchorNode ?? null;
+      const cell = closest(node, 'td, th', editor);
+      if (cell) {
+        // Tab anda pelas células da tabela; na última, cria uma linha nova.
+        event.preventDefault();
+        const cells = Array.from(cell.closest('table')!.querySelectorAll('td, th'));
+        let index = cells.indexOf(cell) + (event.shiftKey ? -1 : 1);
+        if (index >= cells.length) {
+          tableAction('tableRow');
+          emitChange(true);
+          return;
+        }
+        index = Math.max(0, index);
+        const range = document.createRange();
+        range.selectNodeContents(cells[index]);
+        range.collapse(false);
+        sel!.removeAllRanges();
+        sel!.addRange(range);
+        return;
+      }
+      if (closest(node, 'li', editor)) {
+        // Tab numa lista aumenta o recuo; Shift+Tab diminui.
+        event.preventDefault();
+        document.execCommand(event.shiftKey ? 'outdent' : 'indent');
+        emitChange(true);
+      }
+    };
     const onFocus = () => callbacks.current.onFocusChange?.(true);
     const onBlur = () => {
       callbacks.current.onFocusChange?.(false);
@@ -418,6 +464,7 @@ export default function RichNoteEditor({
     editor.addEventListener('input', onInput);
     editor.addEventListener('click', onClick);
     editor.addEventListener('paste', onPaste);
+    editor.addEventListener('keydown', onKeyDown);
     editor.addEventListener('focus', onFocus);
     editor.addEventListener('blur', onBlur);
     if (IS_DOM) window.addEventListener('resize', onResize);
@@ -426,6 +473,7 @@ export default function RichNoteEditor({
       editor.removeEventListener('input', onInput);
       editor.removeEventListener('click', onClick);
       editor.removeEventListener('paste', onPaste);
+      editor.removeEventListener('keydown', onKeyDown);
       editor.removeEventListener('focus', onFocus);
       editor.removeEventListener('blur', onBlur);
       if (IS_DOM) window.removeEventListener('resize', onResize);
