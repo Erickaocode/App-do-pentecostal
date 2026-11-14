@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { dateKey } from '../utils/dates';
+import { noteToPlainText } from '../utils/noteFormat';
 import type { Favorite, Highlight, Note, VerseRef } from '../types';
 
 // ---------- Configurações ----------
@@ -64,16 +65,16 @@ export async function listActivityDates(db: SQLiteDatabase): Promise<string[]> {
 
 // ---------- Notas ----------
 
-export function listNotes(db: SQLiteDatabase, search?: string): Promise<Note[]> {
-  if (search && search.trim().length > 0) {
-    const like = `%${search.trim()}%`;
-    return db.getAllAsync<Note>(
-      'SELECT * FROM notes WHERE title LIKE ? OR content LIKE ? ORDER BY updated_at DESC',
-      like,
-      like
-    );
-  }
-  return db.getAllAsync<Note>('SELECT * FROM notes ORDER BY updated_at DESC');
+export async function listNotes(db: SQLiteDatabase, search?: string): Promise<Note[]> {
+  const notes = await db.getAllAsync<Note>('SELECT * FROM notes ORDER BY updated_at DESC');
+  const query = search?.trim().toLocaleLowerCase('pt-BR');
+  if (!query) return notes;
+  // A busca olha o texto da anotação, não as marcações de formatação (HTML).
+  return notes.filter(
+    (note) =>
+      note.title.toLocaleLowerCase('pt-BR').includes(query) ||
+      noteToPlainText(note.content).toLocaleLowerCase('pt-BR').includes(query)
+  );
 }
 
 export function getNote(db: SQLiteDatabase, id: number): Promise<Note | null> {

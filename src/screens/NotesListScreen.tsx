@@ -9,6 +9,7 @@ import type { NotesStackParamList } from '../navigation/types';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { Note } from '../types';
+import { noteToPlainText } from '../utils/noteFormat';
 
 type Props = NativeStackScreenProps<NotesStackParamList, 'NotesList'>;
 
@@ -86,7 +87,7 @@ export function NotesListScreen({ navigation }: Props) {
               </Text>
             ) : null}
             <Text style={styles.noteContent} numberOfLines={2}>
-              {item.content}
+              {noteToPlainText(item.content)}
             </Text>
           </Pressable>
         )}
