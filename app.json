@@ -2,14 +2,14 @@
   "expo": {
     "name": "App do Pentecostal",
     "slug": "app-do-pentecostal",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.erickaocode.appdopentecostal",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "pt-BR",
@@ -44,7 +44,7 @@
     },
     "android": {
       "package": "com.erickaocode.appdopentecostal",
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "backgroundColor": "#FAF6F0",
         "foregroundImage": "./assets/android-icon-foreground.png",
