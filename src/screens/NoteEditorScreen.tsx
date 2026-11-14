@@ -13,7 +13,12 @@ import {
   View,
 } from 'react-native';
 import { HolyricsSheet } from '../components/HolyricsSheet';
-import RichNoteEditor, { type RichNoteEditorRef } from '../components/RichNoteEditor';
+import { NoteFormatToolbar } from '../components/NoteFormatToolbar';
+import RichNoteEditor, {
+  type EditorCommand,
+  type EditorFormats,
+  type RichNoteEditorRef,
+} from '../components/RichNoteEditor';
 import { SermonTimerPanel } from '../components/SermonTimerPanel';
 import { findVerseReferences } from '../holyrics/client';
 import { VerseSuggestions } from '../components/VerseSuggestions';
@@ -73,6 +78,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [holyricsOpen, setHolyricsOpen] = useState(false);
   const [editorFocused, setEditorFocused] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const [formats, setFormats] = useState<EditorFormats | null>(null);
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -274,6 +280,10 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     setPlain(text);
   }, []);
 
+  const handleCommand = useCallback((type: EditorCommand['type'], value?: string | null) => {
+    editorRef.current?.run(type, value ?? null);
+  }, []);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -314,6 +324,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           onChange={handleEditorChange}
           onFocusChange={setEditorFocused}
           onSelectText={setSelectedText}
+          onFormats={setFormats}
           dom={{
             style: { flex: 1, backgroundColor: colors.background },
             containerStyle: { flex: 1 },
@@ -352,6 +363,12 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           </Pressable>
         </ScrollView>
       ) : null}
+
+      <NoteFormatToolbar
+        formats={formats}
+        editorFocused={editorFocused}
+        onCommand={handleCommand}
+      />
 
       <HolyricsSheet
         visible={holyricsOpen}
