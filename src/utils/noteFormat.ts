@@ -5,7 +5,9 @@
 
 /** Diz se o conteúdo já está no formato novo (HTML). */
 export function isHtml(content: string): boolean {
-  return /^\s*<(div|p|h[1-6]|ul|ol|pre|blockquote|table|br|b|i|u|s|span|strong|em)[\s>/]/i.test(
+  // O editor pode deixar a primeira linha sem marcação ("Texto<div>...</div>"),
+  // então procura as marcações em qualquer parte.
+  return /<(div|p|h[1-6]|ul|ol|li|pre|blockquote|table|br|b|i|u|s|strike|span|font|strong|em)[\s>/]/i.test(
     content
   );
 }
