@@ -117,7 +117,10 @@ export default function RichNoteEditor({
       changeTimer.current = null;
       const editor = editorRef.current;
       if (!editor) return;
-      callbacks.current.onChange(editor.innerHTML, plainText(editor));
+      let html = editor.innerHTML;
+      // Uma linha só, sem marcação, seria confundida com uma anotação antiga em texto puro.
+      if (html && !/<[a-z]/i.test(html)) html = `<div>${html}</div>`;
+      callbacks.current.onChange(html, plainText(editor));
     };
     if (immediate) send();
     else changeTimer.current = setTimeout(send, 120);
