@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { HolyricsSheet } from '../components/HolyricsSheet';
+import RichNoteEditor, { type RichNoteEditorRef } from '../components/RichNoteEditor';
 import { SermonTimerPanel } from '../components/SermonTimerPanel';
 import { findVerseReferences } from '../holyrics/client';
 import { VerseSuggestions } from '../components/VerseSuggestions';
@@ -24,6 +25,7 @@ import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { Note, VerseRef } from '../types';
 import { confirmAction, showMessage } from '../utils/dialogs';
+import { escapeHtml, noteToPlainText, toNoteHtml } from '../utils/noteFormat';
 
 type Props = NativeStackScreenProps<NotesStackParamList, 'NoteEditor'>;
 
@@ -50,7 +52,11 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const headerHeight = useHeaderHeight();
   const [title, setTitle] = useState('');
+  // HTML da anotação e o mesmo conteúdo em texto puro (para sugestões, Holyrics e validação).
   const [content, setContent] = useState('');
+  const [plain, setPlain] = useState('');
+  const [initialHtml, setInitialHtml] = useState('');
+  const editorRef = useRef<RichNoteEditorRef>(null);
   const [verseRef, setVerseRef] = useState<VerseRef | null>(
     prefill
       ? {
@@ -65,7 +71,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [existingNote, setExistingNote] = useState<Note | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [holyricsOpen, setHolyricsOpen] = useState(false);
-  const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [editorFocused, setEditorFocused] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -77,8 +84,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const createdHereRef = useRef(false);
   const deletedRef = useRef(false);
   const lastSavedRef = useRef<string | null>(null);
-  const latestRef = useRef({ title, content, verseRef });
-  latestRef.current = { title, content, verseRef };
+  const latestRef = useRef({ title, content, plain, verseRef });
+  latestRef.current = { title, content, plain, verseRef };
   // Fila de gravações: impede que duas gravações seguidas criem notas duplicadas.
   const saveChainRef = useRef<Promise<void>>(Promise.resolve());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,8 +97,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     }
     const run = async () => {
       if (deletedRef.current) return;
-      const { title: t, content: c, verseRef: ref } = latestRef.current;
-      if (!c.trim()) {
+      const { title: t, content: c, plain: p, verseRef: ref } = latestRef.current;
+      if (!p.trim()) {
         // Nota criada automaticamente nesta tela e depois apagada: não deixa uma nota vazia.
         if (createdHereRef.current && savedIdRef.current) {
           await deleteNote(db, savedIdRef.current);
@@ -160,6 +167,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         setExistingNote(note);
         setTitle(note.title);
         setContent(note.content);
+        setPlain(noteToPlainText(note.content));
+        setInitialHtml(toNoteHtml(note.content));
         if (note.book_abbrev && note.book_name && note.chapter && note.verse) {
           setVerseRef({
             bookAbbrev: note.book_abbrev,
@@ -175,7 +184,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   }, [db, noteId]);
 
   async function handleSave() {
-    if (!content.trim()) {
+    if (!plain.trim()) {
       showMessage('Escreva algo', 'A anotação não pode ficar vazia.');
       return;
     }
@@ -185,7 +194,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
 
   function handleInsertVerse(verse: VerseWithBook) {
     const citation = `${verse.book_name} ${verse.chapter}:${verse.verse}${CITATION_SEPARATOR}${verse.text}”`;
-    setContent((prev) => (prev.trim() ? `${prev.trimEnd()}\n\n${citation}` : citation));
+    editorRef.current?.run('appendHtml', `<div>${escapeHtml(citation)}</div>`);
   }
 
   function handleOpenVerse(verse: VerseWithBook) {
@@ -242,13 +251,28 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const holyricsVerseRefs = useMemo(
     () =>
       findVerseReferences(
-        content,
+        plain,
         verseRef ? `${verseRef.bookName} ${verseRef.chapter}:${verseRef.verse}` : null
       ),
-    [content, verseRef]
+    [plain, verseRef]
   );
-  const selectedText =
-    selection.end > selection.start ? content.slice(selection.start, selection.end) : '';
+
+  const editorColors = useMemo(
+    () => ({
+      text: colors.textPrimary,
+      secondary: colors.textSecondary,
+      primary: colors.primary,
+      surface: colors.surface,
+      border: colors.border,
+      background: colors.background,
+    }),
+    [colors]
+  );
+
+  const handleEditorChange = useCallback((html: string, text: string) => {
+    setContent(html);
+    setPlain(text);
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -257,17 +281,15 @@ export function NoteEditorScreen({ route, navigation }: Props) {
       keyboardVerticalOffset={headerHeight}
     >
       <SermonTimerPanel />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={styles.header}>
         {verseRef ? (
           <View style={styles.verseBanner}>
             <Text style={styles.verseBannerRef}>
               {verseRef.bookName} {verseRef.chapter}:{verseRef.verse}
             </Text>
-            <Text style={styles.verseBannerText}>{verseRef.text}</Text>
+            <Text style={styles.verseBannerText} numberOfLines={3}>
+              {verseRef.text}
+            </Text>
           </View>
         ) : null}
 
@@ -277,40 +299,59 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           placeholderTextColor={colors.textSecondary}
           value={title}
           onChangeText={setTitle}
+          returnKeyType="next"
+          onSubmitEditing={() => editorRef.current?.run('focus', null)}
         />
-        <TextInput
-          style={styles.contentInput}
+      </View>
+
+      <View style={styles.editorBox}>
+        <RichNoteEditor
+          ref={editorRef}
+          docKey={loaded ? 'ready' : 'loading'}
+          initialHtml={initialHtml}
           placeholder="Escreva sua anotação..."
-          placeholderTextColor={colors.textSecondary}
-          value={content}
-          onChangeText={setContent}
-          onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
-          multiline
-          textAlignVertical="top"
+          colors={editorColors}
+          onChange={handleEditorChange}
+          onFocusChange={setEditorFocused}
+          onSelectText={setSelectedText}
+          dom={{
+            style: { flex: 1, backgroundColor: colors.background },
+            containerStyle: { flex: 1 },
+            hideKeyboardAccessoryView: true,
+            keyboardDisplayRequiresUserAction: false,
+          }}
         />
+      </View>
 
-        <VerseSuggestions
-          text={[verseRef?.text, title, withoutCitations(content)].filter(Boolean).join('\n')}
-          exclude={verseRef ?? undefined}
-          citedText={content}
-          onInsert={handleInsertVerse}
-          onOpen={handleOpenVerse}
-        />
+      {!editorFocused ? (
+        <ScrollView
+          style={styles.footer}
+          contentContainerStyle={styles.footerContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <VerseSuggestions
+            text={[verseRef?.text, title, withoutCitations(plain)].filter(Boolean).join('\n')}
+            exclude={verseRef ?? undefined}
+            citedText={plain}
+            onInsert={handleInsertVerse}
+            onOpen={handleOpenVerse}
+          />
 
-        <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
-          {saveStatus === 'saving'
-            ? 'Salvando...'
-            : saveStatus === 'saved'
-              ? 'Salvo automaticamente no aparelho'
-              : saveStatus === 'error'
-                ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
-                : ' '}
-        </Text>
+          <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
+            {saveStatus === 'saving'
+              ? 'Salvando...'
+              : saveStatus === 'saved'
+                ? 'Salvo automaticamente no aparelho'
+                : saveStatus === 'error'
+                  ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
+                  : ' '}
+          </Text>
 
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Salvar</Text>
-        </Pressable>
-      </ScrollView>
+          <Pressable style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Salvar</Text>
+          </Pressable>
+        </ScrollView>
+      ) : null}
 
       <HolyricsSheet
         visible={holyricsOpen}
@@ -326,14 +367,22 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-    content: { padding: 16, paddingBottom: 40 },
+    header: { paddingHorizontal: 16, paddingTop: 12 },
+    editorBox: { flex: 1, minHeight: 160 },
+    footer: {
+      flexGrow: 0,
+      maxHeight: '45%',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    footerContent: { padding: 16, paddingTop: 8 },
     verseBanner: {
       backgroundColor: colors.surface,
       borderLeftWidth: 4,
       borderLeftColor: colors.primary,
       borderRadius: 10,
       padding: 12,
-      marginBottom: 16,
+      marginBottom: 8,
     },
     verseBannerRef: {
       fontSize: 13,
@@ -353,18 +402,12 @@ function createStyles(colors: ThemeColors) {
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       paddingVertical: 10,
-      marginBottom: 12,
-    },
-    contentInput: {
-      fontSize: 15,
-      color: colors.textPrimary,
-      minHeight: 220,
-      lineHeight: 22,
+      marginBottom: 8,
     },
     saveStatus: {
       fontSize: 12,
       color: colors.textSecondary,
-      marginTop: 16,
+      marginTop: 8,
     },
     saveStatusError: {
       color: colors.danger,
