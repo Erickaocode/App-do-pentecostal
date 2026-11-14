@@ -39,12 +39,29 @@ const TEXT_COLORS: { value: string | null; label: string }[] = [
   { value: '#3478D9', label: 'Azul' },
 ];
 
+const TABLE_ACTIONS: {
+  type: 'tableRow' | 'tableCol' | 'tableDelete';
+  icon: IconName;
+  label: string;
+}[] = [
+  { type: 'tableRow', icon: 'table-row-plus-after', label: 'Linha' },
+  { type: 'tableCol', icon: 'table-column-plus-after', label: 'Coluna' },
+  { type: 'tableDelete', icon: 'table-remove', label: 'Excluir' },
+];
+
 /** Barra de ferramentas embaixo do editor, como a das Notas do iPhone. */
 export function NoteFormatToolbar({ formats, editorFocused, onCommand, onPanelChange }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const rootRef = useRef<View>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [tableMenuOpen, setTableMenuOpen] = useState(false);
+  const inTable = !!formats?.inTable;
+
+  // O menu da tabela só faz sentido com o cursor dentro de uma tabela.
+  useEffect(() => {
+    if (!inTable) setTableMenuOpen(false);
+  }, [inTable]);
 
   useEffect(() => {
     onPanelChange?.(panelOpen);
@@ -233,6 +250,33 @@ export function NoteFormatToolbar({ formats, editorFocused, onCommand, onPanelCh
         </View>
       ) : null}
 
+      {tableMenuOpen ? (
+        <View style={styles.tableMenu}>
+          {TABLE_ACTIONS.map((action) => (
+            <Pressable
+              key={action.type}
+              onPress={() => onCommand(action.type)}
+              accessibilityLabel={action.label}
+              style={({ pressed }) => [styles.tableAction, pressed && styles.buttonPressed]}
+            >
+              <MaterialCommunityIcons
+                name={action.icon}
+                size={20}
+                color={action.type === 'tableDelete' ? colors.danger : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.tableActionText,
+                  action.type === 'tableDelete' && { color: colors.danger },
+                ]}
+              >
+                {action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.bar}>
         <ToolButton
           label="Formatar texto"
@@ -270,8 +314,17 @@ export function NoteFormatToolbar({ formats, editorFocused, onCommand, onPanelCh
             color={iconColor(formats?.list === 'checklist')}
           />
         </ToolButton>
-        <ToolButton label="Tabela" onPress={() => onCommand('table')} styles={styles}>
-          <MaterialCommunityIcons name="table-large" size={23} color={colors.primary} />
+        <ToolButton
+          label={inTable ? 'Opções da tabela' : 'Tabela'}
+          active={tableMenuOpen}
+          onPress={() => (inTable ? setTableMenuOpen((open) => !open) : onCommand('table'))}
+          styles={styles}
+        >
+          <MaterialCommunityIcons
+            name={inTable ? 'table-edit' : 'table-large'}
+            size={23}
+            color={iconColor(tableMenuOpen)}
+          />
         </ToolButton>
 
         <View style={styles.spacer} />
@@ -426,6 +479,26 @@ function createStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    tableMenu: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: colors.surface,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    tableAction: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      height: 38,
+      borderRadius: 10,
+      backgroundColor: colors.surfaceAlt,
+    },
+    tableActionText: { fontSize: 14, fontWeight: '600', color: colors.primary },
     colorRow: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 2 },
     colorDot: {
       width: 30,
