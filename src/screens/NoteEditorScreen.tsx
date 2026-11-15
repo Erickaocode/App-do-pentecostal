@@ -330,36 +330,38 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         />
       </View>
 
-      {/* Com o teclado aberto, as sugestões saem da frente do que a pessoa está escrevendo. */}
-      {!editorFocused && !keyboardVisible && !formatPanelOpen ? (
-        <ScrollView
-          style={styles.footer}
-          contentContainerStyle={styles.footerContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <VerseSuggestions
-            text={[verseRef?.text, title, withoutCitations(plain)].filter(Boolean).join('\n')}
-            exclude={verseRef ?? undefined}
-            citedText={plain}
-            onInsert={handleInsertVerse}
-            onOpen={handleOpenVerse}
-          />
+      {/* Com o teclado aberto, as sugestões saem da frente do que a pessoa está escrevendo.
+          Ficam montadas (só escondidas) para não perder as sugestões já encontradas. */}
+      <ScrollView
+        style={[
+          styles.footer,
+          (editorFocused || keyboardVisible || formatPanelOpen) && styles.hidden,
+        ]}
+        contentContainerStyle={styles.footerContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <VerseSuggestions
+          text={[verseRef?.text, title, withoutCitations(plain)].filter(Boolean).join('\n')}
+          exclude={verseRef ?? undefined}
+          citedText={plain}
+          onInsert={handleInsertVerse}
+          onOpen={handleOpenVerse}
+        />
 
-          <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
-            {saveStatus === 'saving'
-              ? 'Salvando...'
-              : saveStatus === 'saved'
-                ? 'Salvo automaticamente no aparelho'
-                : saveStatus === 'error'
-                  ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
-                  : ' '}
-          </Text>
+        <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
+          {saveStatus === 'saving'
+            ? 'Salvando...'
+            : saveStatus === 'saved'
+              ? 'Salvo automaticamente no aparelho'
+              : saveStatus === 'error'
+                ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
+                : ' '}
+        </Text>
 
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Salvar</Text>
-          </Pressable>
-        </ScrollView>
-      ) : null}
+        <Pressable style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Salvar</Text>
+        </Pressable>
+      </ScrollView>
 
       <NoteFormatToolbar
         formats={formats}
@@ -384,6 +386,7 @@ function createStyles(colors: ThemeColors) {
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
     header: { paddingHorizontal: 16, paddingTop: 12 },
     editorBox: { flex: 1, minHeight: 160 },
+    hidden: { display: 'none' },
     footer: {
       flexGrow: 0,
       maxHeight: '45%',
