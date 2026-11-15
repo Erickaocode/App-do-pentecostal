@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
-  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,6 +22,7 @@ import { findVerseReferences } from '../holyrics/client';
 import { VerseSuggestions } from '../components/VerseSuggestions';
 import type { VerseWithBook } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
+import { useKeyboardInset } from '../hooks/useKeyboardInset';
 import { createNote, deleteNote, getNote, updateNote } from '../db/userQueries';
 import type { NotesStackParamList } from '../navigation/types';
 import { useTheme } from '../context/ThemeContext';
@@ -55,7 +54,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const db = useUserDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const headerHeight = useHeaderHeight();
+  const containerRef = useRef<View>(null);
+  const { inset: keyboardInset, keyboardVisible } = useKeyboardInset(containerRef);
   const [title, setTitle] = useState('');
   // HTML da anotação e o mesmo conteúdo em texto puro (para sugestões, Holyrics e validação).
   const [content, setContent] = useState('');
@@ -286,11 +286,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior="padding"
-      keyboardVerticalOffset={headerHeight}
-    >
+    <View ref={containerRef} style={[styles.container, { paddingBottom: keyboardInset }]}>
       <SermonTimerPanel />
       <View style={styles.header}>
         {verseRef ? (
@@ -377,7 +373,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         verseRefs={holyricsVerseRefs}
         selectedText={selectedText}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
