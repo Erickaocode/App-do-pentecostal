@@ -330,7 +330,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         />
       </View>
 
-      {!editorFocused && !formatPanelOpen ? (
+      {/* Com o teclado aberto, as sugestões saem da frente do que a pessoa está escrevendo. */}
+      {!editorFocused && !keyboardVisible && !formatPanelOpen ? (
         <ScrollView
           style={styles.footer}
           contentContainerStyle={styles.footerContent}
@@ -362,7 +363,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
 
       <NoteFormatToolbar
         formats={formats}
-        editorFocused={editorFocused}
+        editorFocused={editorFocused || keyboardVisible}
         onCommand={handleCommand}
         onPanelChange={setFormatPanelOpen}
       />
