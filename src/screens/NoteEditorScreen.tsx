@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -80,6 +81,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [formatPanelOpen, setFormatPanelOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [formats, setFormats] = useState<EditorFormats | null>(null);
+  const [suggestSignal, setSuggestSignal] = useState(0);
+  const footerRef = useRef<ScrollView>(null);
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -218,6 +221,14 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     });
   }
 
+  // Botão do topo: tira o teclado da frente e mostra as sugestões.
+  function handleSuggestFromHeader() {
+    editorRef.current?.run('blur', null);
+    Keyboard.dismiss();
+    setSuggestSignal((n) => n + 1);
+    footerRef.current?.scrollTo({ y: 0, animated: false });
+  }
+
   async function handleDelete() {
     if (!noteId) return;
     const confirmed = await confirmAction({
@@ -238,6 +249,13 @@ export function NoteEditorScreen({ route, navigation }: Props) {
       title: isEditing ? 'Editar anotação' : 'Nova anotação',
       headerRight: () => (
         <View style={styles.headerActions}>
+          <Pressable
+            onPress={handleSuggestFromHeader}
+            hitSlop={10}
+            accessibilityLabel="Sugerir versículos"
+          >
+            <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
+          </Pressable>
           <Pressable
             onPress={() => setHolyricsOpen(true)}
             hitSlop={10}
@@ -333,6 +351,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
       {/* Com o teclado aberto, as sugestões saem da frente do que a pessoa está escrevendo.
           Ficam montadas (só escondidas) para não perder as sugestões já encontradas. */}
       <ScrollView
+        ref={footerRef}
         style={[
           styles.footer,
           (editorFocused || keyboardVisible || formatPanelOpen) && styles.hidden,
@@ -346,6 +365,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           citedText={plain}
           onInsert={handleInsertVerse}
           onOpen={handleOpenVerse}
+          suggestSignal={suggestSignal}
         />
 
         <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>

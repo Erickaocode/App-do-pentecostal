@@ -25,9 +25,18 @@ interface Props {
   citedText: string;
   onInsert: (verse: VerseWithBook) => void;
   onOpen: (verse: VerseWithBook) => void;
+  /** Muda a cada toque no botão de sugestões do topo da tela, que pede uma busca. */
+  suggestSignal?: number;
 }
 
-export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }: Props) {
+export function VerseSuggestions({
+  text,
+  exclude,
+  citedText,
+  onInsert,
+  onOpen,
+  suggestSignal = 0,
+}: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -67,6 +76,11 @@ export function VerseSuggestions({ text, exclude, citedText, onInsert, onOpen }:
       if (current === request.current) setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (suggestSignal > 0) handleSuggest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestSignal]);
 
   // Versículos que a pessoa já inseriu saem da lista; grupos que ficarem vazios somem.
   const visible = groups
