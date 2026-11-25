@@ -3,8 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-    <!-- viewport-fit=cover: no iPhone, o app ocupa a tela inteira (inclusive atrás do entalhe). -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <!-- viewport-fit=cover: no iPhone, o app ocupa a tela inteira (inclusive atrás do entalhe).
+         Sem zoom: o app fica "cravado" na tela, como um app instalado. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover" />
     <title>App do Pentecostal</title>
     <meta name="description" content="Leia a Bíblia, grife versículos, favorite e anote suas reflexões, mesmo sem internet." />
     <meta name="theme-color" content="#FAF6F0" />
@@ -36,7 +37,49 @@
         height: 100%;
         flex: 1;
       }
+
+      /* Tela travada: sem rolagem elástica, sem zoom com toque duplo, sem a página
+         "andar" quando o teclado abre. */
+      html,
+      body {
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        position: fixed;
+        inset: 0;
+        margin: 0;
+      }
+      /* O app ocupa só a parte visível da tela: quando o teclado abre, ele encolhe
+         até a borda de cima do teclado (variáveis atualizadas pelo script abaixo). */
+      #root {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: var(--vv-top, 0px);
+        height: var(--vv-height, 100%);
+      }
     </style>
+    <script>
+      (function () {
+        var vv = window.visualViewport;
+        if (!vv) return;
+        var style = document.documentElement.style;
+        function update() {
+          style.setProperty('--vv-height', vv.height + 'px');
+          style.setProperty('--vv-top', vv.offsetTop + 'px');
+          // O iPhone rola a página para mostrar o campo; com o app preso isso só desalinha.
+          if (window.scrollY !== 0 && vv.offsetTop === 0) window.scrollTo(0, 0);
+        }
+        vv.addEventListener('resize', update);
+        vv.addEventListener('scroll', update);
+        update();
+        // Pinça (zoom) no iPhone: o Safari ignora o user-scalable em alguns casos.
+        document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+      })();
+    </script>
   </head>
 
   <body>
