@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { SuggestionItem } from '../suggest/suggestVerses';
-import { ollamaChat, parseJsonLoose, type OllamaConfig } from './ollama';
+import { aiChat, type AiEngine } from './engine';
+import { parseJsonLoose } from './ollama';
 import { resolveReferences } from './outline';
 
 const SYSTEM_PROMPT = `Você ajuda pregadores pentecostais a encontrar versículos bíblicos.
@@ -15,12 +16,12 @@ interface AiAnswer {
 /** Versículos escolhidos pela IA para a anotação, conferidos na Bíblia do app. */
 export async function aiSuggestVerses(
   db: SQLiteDatabase,
-  config: OllamaConfig,
+  engine: AiEngine,
   text: string,
   skip: Set<string>
 ): Promise<SuggestionItem[]> {
-  const answer = await ollamaChat(
-    config,
+  const answer = await aiChat(
+    engine,
     [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: `Anotação:\n${text.slice(0, 3000)}\n\nIndique até 6 versículos.` },

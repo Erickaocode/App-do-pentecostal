@@ -3,7 +3,8 @@ import { getBooks, getVersesByRefs, type VerseWithBook } from '../db/bibleQuerie
 import { findReferences } from '../suggest/references';
 import { suggestVerses } from '../suggest/suggestVerses';
 import { escapeHtml } from '../utils/noteFormat';
-import { ollamaChat, parseJsonLoose, type OllamaConfig } from './ollama';
+import { aiChat, type AiEngine } from './engine';
+import { parseJsonLoose } from './ollama';
 
 export interface OutlinePoint {
   title: string;
@@ -18,8 +19,8 @@ export interface SermonOutline {
   points: OutlinePoint[];
   application: string;
   conclusion: string;
-  /** Quem escreveu: a IA do Ollama ou o modo básico, sem internet. */
-  source: 'ollama' | 'offline';
+  /** Quem escreveu: a IA (nuvem ou Ollama) ou o modo básico, sem internet. */
+  source: 'ai' | 'offline';
 }
 
 export interface OutlineRequest {
@@ -116,7 +117,7 @@ async function offlineOutline(db: SQLiteDatabase, req: OutlineRequest): Promise<
 }
 
 // ---------------------------------------------------------------------------
-// Modo IA (Ollama)
+// Modo IA (nuvem ou Ollama)
 // ---------------------------------------------------------------------------
 
 interface AiOutline {
@@ -155,9 +156,9 @@ function userPrompt(req: OutlineRequest, hints: VerseWithBook[]): string {
   return lines.filter(Boolean).join('\n\n');
 }
 
-async function ollamaOutline(
+async function aiOutline(
   db: SQLiteDatabase,
-  config: OllamaConfig,
+  engine: AiEngine,
   req: OutlineRequest
 ): Promise<SermonOutline> {
   // Versículos do modo básico entram como dica: ajudam modelos pequenos a acertar referências.
@@ -165,8 +166,8 @@ async function ollamaOutline(
     .flatMap((g) => g.items.map((i) => i.verse))
     .slice(0, 8);
 
-  const answer = await ollamaChat(
-    config,
+  const answer = await aiChat(
+    engine,
     [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: userPrompt(req, hints) },
@@ -198,23 +199,23 @@ async function ollamaOutline(
     points,
     application: (data.aplicacao ?? '').trim(),
     conclusion: (data.conclusao ?? '').trim(),
-    source: 'ollama',
+    source: 'ai',
   };
 }
 
 /**
- * Gera um esboço de pregação a partir do título. Com o Ollama configurado, a IA escreve;
- * se ela falhar (ou não houver Ollama), monta o esboço básico sem internet.
+ * Gera um esboço de pregação a partir do título. Com a IA ligada (nuvem ou Ollama), ela
+ * escreve; se falhar (ou estiver desligada), monta o esboço básico sem internet.
  * Os textos dos versículos sempre vêm da Bíblia do app, nunca da IA.
  */
 export async function generateOutline(
   db: SQLiteDatabase,
   req: OutlineRequest,
-  config: OllamaConfig | null
+  engine: AiEngine | null
 ): Promise<{ outline: SermonOutline; warning?: string }> {
-  if (config) {
+  if (engine) {
     try {
-      return { outline: await ollamaOutline(db, config, req) };
+      return { outline: await aiOutline(db, engine, req) };
     } catch (error) {
       const outline = await offlineOutline(db, req);
       return {
