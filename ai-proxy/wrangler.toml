@@ -1,0 +1,16 @@
+name = "pentecostal-ia"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Qualquer API no padrão OpenAI. Groq (grátis): https://api.groq.com/openai/v1
+AI_BASE_URL = "https://api.groq.com/openai/v1"
+# Confira os modelos disponíveis em console.groq.com/docs/models
+AI_MODEL = "llama-3.3-70b-versatile"
+# A chave NÃO fica aqui: npx wrangler secret put AI_API_KEY
+
+# Até 8 pedidos por minuto por aparelho (IP).
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+simple = { limit = 8, period = 60 }
