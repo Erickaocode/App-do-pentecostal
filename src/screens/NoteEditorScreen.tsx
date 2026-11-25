@@ -14,8 +14,10 @@ import {
   hasCloudConsent,
   loadAiEngine,
   loadAiMode,
+  loadStyleEnabled,
   saveAiMode,
   saveCloudConsent,
+  saveStyleEnabled,
   type AiEngine,
   type AiMode,
 } from '../ai/engine';
@@ -36,7 +38,7 @@ import { VerseSuggestions } from '../components/VerseSuggestions';
 import type { VerseWithBook } from '../db/bibleQueries';
 import { useUserDb } from '../db/UserDbProvider';
 import { useKeyboardInset } from '../hooks/useKeyboardInset';
-import { createNote, deleteNote, getNote, updateNote } from '../db/userQueries';
+import { createNote, deleteNote, getNote, listNotes, updateNote } from '../db/userQueries';
 import type { NotesStackParamList } from '../navigation/types';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
@@ -100,6 +102,30 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [ollama, setOllama] = useState<OllamaConfig | null>(null);
   const [aiMode, setAiMode] = useState<AiMode>('off');
   const [aiEngine, setAiEngine] = useState<AiEngine | null>(null);
+  const [styleEnabled, setStyleEnabled] = useState(false);
+
+  useEffect(() => {
+    loadStyleEnabled(db).then(setStyleEnabled).catch(() => {});
+  }, [db]);
+
+  function handleStyleChange(enabled: boolean) {
+    setStyleEnabled(enabled);
+    saveStyleEnabled(db, enabled).catch(() => {});
+  }
+
+  /** Trechos das 3 anotações mais longas entre as 20 mais recentes (menos a que está aberta). */
+  const loadStyleSamples = useCallback(async (): Promise<string> => {
+    const notes = await listNotes(db);
+    return notes
+      .filter((n) => n.id !== savedIdRef.current)
+      .slice(0, 20)
+      .map((n) => ({ title: n.title, text: withoutCitations(noteToPlainText(n.content)).trim() }))
+      .filter((n) => n.text.length >= 200)
+      .sort((a, b) => b.text.length - a.text.length)
+      .slice(0, 3)
+      .map((n) => `### ${n.title}\n${n.text.slice(0, 700)}`)
+      .join('\n\n');
+  }, [db]);
 
   const reloadAi = useCallback(async () => {
     try {
@@ -137,12 +163,12 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     if (!aiEngine || aiEngine.kind !== 'cloud') return aiEngine;
     if (await hasCloudConsent(db)) return aiEngine;
     const accepted = await confirmAction({
-      title: 'Usar a IA na nuvem?',
+      title: 'Usar o EKS AI?',
       message:
-        'Para gerar a resposta, o título e o texto desta anotação são enviados para um serviço de IA (Groq). ' +
-        'O app não guarda esse envio e ele não é usado para identificar você. ' +
-        'Se preferir, use o modo básico ou o Ollama na aba IA.',
-      confirmText: 'Usar a IA',
+        'Para gerar a resposta, o título e o texto desta anotação são enviados ao Google Gemini, a IA por trás do EKS AI. ' +
+        'O app não guarda esse envio, mas o Google trata o texto conforme a política dele. ' +
+        'Evite dados pessoais sensíveis. Se preferir, use o modo básico ou o Ollama na aba IA.',
+      confirmText: 'Usar o EKS AI',
     });
     if (!accepted) return null;
     await saveCloudConsent(db);
@@ -476,6 +502,9 @@ export function NoteEditorScreen({ route, navigation }: Props) {
                 noteText={withoutCitations(plain)}
                 engine={aiEngine}
                 prepareAi={prepareAi}
+                styleEnabled={styleEnabled}
+                onStyleChange={handleStyleChange}
+                loadStyleSamples={loadStyleSamples}
                 onInsertHtml={handleInsertHtml}
                 onOpenSettings={() => setAssistantTab('ai')}
               />

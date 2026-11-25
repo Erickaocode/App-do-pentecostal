@@ -17,6 +17,10 @@ interface Props {
   prepareAi: () => Promise<AiEngine | null>;
   onInsertHtml: (html: string) => void;
   onOpenSettings: () => void;
+  /** "Escrever no meu estilo": liga/desliga e busca os trechos das anotações antigas. */
+  styleEnabled: boolean;
+  onStyleChange: (enabled: boolean) => void;
+  loadStyleSamples: () => Promise<string>;
 }
 
 /** "Me dá um esboço": a pessoa escreve o tema e recebe a pregação estruturada com versículos. */
@@ -27,6 +31,9 @@ export function SermonOutlinePanel({
   prepareAi,
   onInsertHtml,
   onOpenSettings,
+  styleEnabled,
+  onStyleChange,
+  loadStyleSamples,
 }: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
@@ -51,9 +58,10 @@ export function SermonOutlinePanel({
     try {
       const ready = await prepareAi();
       if (current !== request.current) return;
+      const style = ready && styleEnabled ? await loadStyleSamples().catch(() => '') : '';
       const result = await generateOutline(
         db,
-        { title: effectiveTopic, baseText: baseText.trim() || undefined, notes: noteText },
+        { title: effectiveTopic, baseText: baseText.trim() || undefined, notes: noteText, style },
         ready
       );
       if (current !== request.current) return;
@@ -107,6 +115,27 @@ export function SermonOutlinePanel({
         returnKeyType="done"
         onSubmitEditing={handleGenerate}
       />
+
+      {engine ? (
+        <Pressable
+          onPress={() => onStyleChange(!styleEnabled)}
+          style={styles.styleRow}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: styleEnabled }}
+        >
+          <Ionicons
+            name={styleEnabled ? 'checkbox' : 'square-outline'}
+            size={20}
+            color={colors.primary}
+          />
+          <View style={styles.styleText}>
+            <Text style={styles.styleTitle}>Escrever no meu estilo</Text>
+            <Text style={styles.hint}>
+              O EKS AI lê trechos das suas 3 anotações mais longas e recentes para pregar do seu jeito.
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
 
       <Pressable
         style={({ pressed }) => [
@@ -240,6 +269,9 @@ function createStyles(colors: ThemeColors) {
     disabled: { opacity: 0.45 },
     pressed: { opacity: 0.7 },
     hint: { fontSize: 12, lineHeight: 17, color: colors.textSecondary },
+    styleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+    styleText: { flex: 1, gap: 2 },
+    styleTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
     warning: { fontSize: 12, lineHeight: 17, color: colors.danger },
     preview: {
       marginTop: 6,
