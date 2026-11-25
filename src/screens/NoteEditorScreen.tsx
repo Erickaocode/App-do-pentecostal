@@ -5,19 +5,22 @@ import {
   AppState,
   Keyboard,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { loadOllamaConfig, type OllamaConfig } from '../ai/ollama';
+import { AssistantSheet } from '../components/AssistantSheet';
 import { HolyricsSheet } from '../components/HolyricsSheet';
 import { NoteFormatToolbar } from '../components/NoteFormatToolbar';
+import { OllamaSettings } from '../components/OllamaSettings';
 import RichNoteEditor, {
   type EditorCommand,
   type EditorFormats,
   type RichNoteEditorRef,
 } from '../components/RichNoteEditor';
+import { SermonOutlinePanel } from '../components/SermonOutlinePanel';
 import { SermonTimerPanel } from '../components/SermonTimerPanel';
 import { findVerseReferences } from '../holyrics/client';
 import { VerseSuggestions } from '../components/VerseSuggestions';
@@ -82,7 +85,14 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [selectedText, setSelectedText] = useState('');
   const [formats, setFormats] = useState<EditorFormats | null>(null);
   const [suggestSignal, setSuggestSignal] = useState(0);
-  const footerRef = useRef<ScrollView>(null);
+  // Assistente começa recolhido: a tela fica livre para escrever.
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantTab, setAssistantTab] = useState('verses');
+  const [ollama, setOllama] = useState<OllamaConfig | null>(null);
+
+  useEffect(() => {
+    loadOllamaConfig(db).then(setOllama).catch(() => setOllama(null));
+  }, [db]);
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -221,12 +231,16 @@ export function NoteEditorScreen({ route, navigation }: Props) {
     });
   }
 
-  // Botão do topo: tira o teclado da frente e mostra as sugestões.
+  // Botão do topo: tira o teclado da frente e abre o assistente.
   function handleSuggestFromHeader() {
     editorRef.current?.run('blur', null);
     Keyboard.dismiss();
-    setSuggestSignal((n) => n + 1);
-    footerRef.current?.scrollTo({ y: 0, animated: false });
+    setAssistantOpen(true);
+    if (assistantTab === 'verses') setSuggestSignal((n) => n + 1);
+  }
+
+  function handleInsertHtml(html: string) {
+    editorRef.current?.run('appendHtml', html);
   }
 
   async function handleDelete() {
@@ -271,7 +285,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         </View>
       ),
     });
-  }, [navigation, isEditing, existingNote, colors, styles]);
+  }, [navigation, isEditing, existingNote, colors, styles, assistantTab]);
 
   const holyricsVerseRefs = useMemo(
     () =>
@@ -348,40 +362,77 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         />
       </View>
 
-      {/* Com o teclado aberto, as sugestões saem da frente do que a pessoa está escrevendo.
-          Ficam montadas (só escondidas) para não perder as sugestões já encontradas. */}
-      <ScrollView
-        ref={footerRef}
-        style={[
-          styles.footer,
-          (editorFocused || keyboardVisible || formatPanelOpen) && styles.hidden,
-        ]}
-        contentContainerStyle={styles.footerContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <VerseSuggestions
-          text={[verseRef?.text, title, withoutCitations(plain)].filter(Boolean).join('\n')}
-          exclude={verseRef ?? undefined}
-          citedText={plain}
-          onInsert={handleInsertVerse}
-          onOpen={handleOpenVerse}
-          suggestSignal={suggestSignal}
-        />
-
-        <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
-          {saveStatus === 'saving'
+      {/* Assistente em gaveta: arrasta para baixo e ele vira uma barrinha. Com o teclado
+          aberto some de vez. Fica montado (só escondido) para não perder o que já gerou. */}
+      <AssistantSheet
+        open={assistantOpen}
+        onOpenChange={setAssistantOpen}
+        activeTab={assistantTab}
+        onTabChange={setAssistantTab}
+        hidden={editorFocused || keyboardVisible || formatPanelOpen}
+        scrollSignal={suggestSignal}
+        status={
+          saveStatus === 'saving'
             ? 'Salvando...'
             : saveStatus === 'saved'
-              ? 'Salvo automaticamente no aparelho'
+              ? 'Salvo'
               : saveStatus === 'error'
-                ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
-                : ' '}
-        </Text>
-
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Salvar</Text>
-        </Pressable>
-      </ScrollView>
+                ? 'Erro ao salvar'
+                : undefined
+        }
+        tabs={[
+          {
+            key: 'verses',
+            label: 'Versículos',
+            icon: 'book-outline',
+            content: (
+              <>
+                <VerseSuggestions
+                  text={[verseRef?.text, title, withoutCitations(plain)].filter(Boolean).join('\n')}
+                  exclude={verseRef ?? undefined}
+                  citedText={plain}
+                  onInsert={handleInsertVerse}
+                  onOpen={handleOpenVerse}
+                  suggestSignal={suggestSignal}
+                  ollama={ollama}
+                />
+                <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
+                  {saveStatus === 'saving'
+                    ? 'Salvando...'
+                    : saveStatus === 'saved'
+                      ? 'Salvo automaticamente no aparelho'
+                      : saveStatus === 'error'
+                        ? 'Não foi possível salvar. Toque em Salvar para tentar de novo.'
+                        : ' '}
+                </Text>
+                <Pressable style={styles.saveButton} onPress={handleSave}>
+                  <Text style={styles.saveButtonText}>Salvar</Text>
+                </Pressable>
+              </>
+            ),
+          },
+          {
+            key: 'outline',
+            label: 'Esboço',
+            icon: 'list-outline',
+            content: (
+              <SermonOutlinePanel
+                noteTitle={title}
+                noteText={withoutCitations(plain)}
+                ollama={ollama}
+                onInsertHtml={handleInsertHtml}
+                onOpenSettings={() => setAssistantTab('ai')}
+              />
+            ),
+          },
+          {
+            key: 'ai',
+            label: 'IA',
+            icon: 'settings-outline',
+            content: <OllamaSettings config={ollama} onChange={setOllama} />,
+          },
+        ]}
+      />
 
       <NoteFormatToolbar
         formats={formats}
@@ -406,14 +457,6 @@ function createStyles(colors: ThemeColors) {
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
     header: { paddingHorizontal: 16, paddingTop: 12 },
     editorBox: { flex: 1, minHeight: 160 },
-    hidden: { display: 'none' },
-    footer: {
-      flexGrow: 0,
-      maxHeight: '45%',
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
-    },
-    footerContent: { padding: 16, paddingTop: 8 },
     verseBanner: {
       backgroundColor: colors.surface,
       borderLeftWidth: 4,
