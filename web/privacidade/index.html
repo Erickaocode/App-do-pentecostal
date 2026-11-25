@@ -46,7 +46,7 @@
   <h2>Assistente de IA (opcional)</h2>
   <p>O assistente de anotações pode sugerir versículos e montar esboços de pregação. Ele tem três modos, que você escolhe no próprio app:</p>
   <ul>
-    <li><strong>IA na nuvem:</strong> só quando você toca para sugerir versículos ou gerar um esboço, o título e o texto da anotação aberta são enviados para um serviço de IA (Groq), por meio de um servidor intermediário do projeto, apenas para gerar a resposta. O servidor intermediário não grava o texto. Antes do primeiro uso o app pede o seu aceite.</li>
+    <li><strong>EKS AI na nuvem:</strong> só quando você toca para sugerir versículos ou gerar um esboço, o título e o texto da anotação aberta são enviados ao Google Gemini, por meio de um servidor intermediário do projeto, apenas para gerar a resposta. O servidor intermediário não grava o texto; o Google trata o texto conforme a <a href="https://ai.google.dev/gemini-api/terms">política dele</a>. Se você ativar "Escrever no meu estilo", trechos de até 3 anotações suas também são enviados. Antes do primeiro uso o app pede o seu aceite.</li>
     <li><strong>Ollama:</strong> o texto vai apenas para o computador que você configurar, na sua própria rede.</li>
     <li><strong>Desligada:</strong> nada é enviado; as sugestões são montadas no aparelho.</li>
   </ul>
