@@ -10,11 +10,20 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import {
+  hasCloudConsent,
+  loadAiEngine,
+  loadAiMode,
+  saveAiMode,
+  saveCloudConsent,
+  type AiEngine,
+  type AiMode,
+} from '../ai/engine';
 import { loadOllamaConfig, type OllamaConfig } from '../ai/ollama';
+import { AiSettings } from '../components/AiSettings';
 import { AssistantSheet } from '../components/AssistantSheet';
 import { HolyricsSheet } from '../components/HolyricsSheet';
 import { NoteFormatToolbar } from '../components/NoteFormatToolbar';
-import { OllamaSettings } from '../components/OllamaSettings';
 import RichNoteEditor, {
   type EditorCommand,
   type EditorFormats,
@@ -89,10 +98,56 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantTab, setAssistantTab] = useState('verses');
   const [ollama, setOllama] = useState<OllamaConfig | null>(null);
+  const [aiMode, setAiMode] = useState<AiMode>('off');
+  const [aiEngine, setAiEngine] = useState<AiEngine | null>(null);
+
+  const reloadAi = useCallback(async () => {
+    try {
+      const [mode, config, engine] = await Promise.all([
+        loadAiMode(db),
+        loadOllamaConfig(db),
+        loadAiEngine(db),
+      ]);
+      setAiMode(mode);
+      setOllama(config);
+      setAiEngine(engine);
+    } catch {
+      setAiEngine(null);
+    }
+  }, [db]);
 
   useEffect(() => {
-    loadOllamaConfig(db).then(setOllama).catch(() => setOllama(null));
-  }, [db]);
+    reloadAi();
+  }, [reloadAi]);
+
+  async function handleAiModeChange(mode: AiMode) {
+    await saveAiMode(db, mode);
+    await reloadAi();
+  }
+
+  async function handleOllamaChange() {
+    await reloadAi();
+  }
+
+  /**
+   * Motor da IA na hora de usar. Na nuvem, a primeira vez pede o aceite da pessoa
+   * (o texto sai do aparelho); se ela não aceitar, fica no modo básico.
+   */
+  const prepareAi = useCallback(async (): Promise<AiEngine | null> => {
+    if (!aiEngine || aiEngine.kind !== 'cloud') return aiEngine;
+    if (await hasCloudConsent(db)) return aiEngine;
+    const accepted = await confirmAction({
+      title: 'Usar a IA na nuvem?',
+      message:
+        'Para gerar a resposta, o título e o texto desta anotação são enviados para um serviço de IA (Groq). ' +
+        'O app não guarda esse envio e ele não é usado para identificar você. ' +
+        'Se preferir, use o modo básico ou o Ollama na aba IA.',
+      confirmText: 'Usar a IA',
+    });
+    if (!accepted) return null;
+    await saveCloudConsent(db);
+    return aiEngine;
+  }, [aiEngine, db]);
   // Numa nota existente, só salva automaticamente depois de carregar o conteúdo,
   // para nunca gravar o formulário vazio por cima do que estava salvo.
   const [loaded, setLoaded] = useState(!noteId);
@@ -394,7 +449,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
                   onInsert={handleInsertVerse}
                   onOpen={handleOpenVerse}
                   suggestSignal={suggestSignal}
-                  ollama={ollama}
+                  prepareAi={prepareAi}
                 />
                 <Text style={[styles.saveStatus, saveStatus === 'error' && styles.saveStatusError]}>
                   {saveStatus === 'saving'
@@ -419,7 +474,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
               <SermonOutlinePanel
                 noteTitle={title}
                 noteText={withoutCitations(plain)}
-                ollama={ollama}
+                engine={aiEngine}
+                prepareAi={prepareAi}
                 onInsertHtml={handleInsertHtml}
                 onOpenSettings={() => setAssistantTab('ai')}
               />
@@ -429,7 +485,14 @@ export function NoteEditorScreen({ route, navigation }: Props) {
             key: 'ai',
             label: 'IA',
             icon: 'settings-outline',
-            content: <OllamaSettings config={ollama} onChange={setOllama} />,
+            content: (
+              <AiSettings
+                mode={aiMode}
+                onModeChange={handleAiModeChange}
+                ollama={ollama}
+                onOllamaChange={handleOllamaChange}
+              />
+            ),
           },
         ]}
       />

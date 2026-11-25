@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { aiSuggestVerses } from '../ai/aiSuggest';
-import type { OllamaConfig } from '../ai/ollama';
+import type { AiEngine } from '../ai/engine';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { VerseWithBook } from '../db/bibleQueries';
@@ -30,8 +30,9 @@ interface Props {
   onOpen: (verse: VerseWithBook) => void;
   /** Muda a cada toque no botão de sugestões do topo da tela, que pede uma busca. */
   suggestSignal?: number;
-  /** Com o Ollama configurado, a IA também lê o texto e indica versículos pelo sentido. */
-  ollama?: OllamaConfig | null;
+  /** Com a IA ligada, ela também lê o texto e indica versículos pelo sentido.
+   *  Devolve o motor na hora do uso (pode pedir o aceite da pessoa) ou null. */
+  prepareAi?: () => Promise<AiEngine | null>;
 }
 
 export function VerseSuggestions({
@@ -41,7 +42,7 @@ export function VerseSuggestions({
   onInsert,
   onOpen,
   suggestSignal = 0,
-  ollama = null,
+  prepareAi,
 }: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
@@ -76,7 +77,9 @@ export function VerseSuggestions({
       // Uma busca antiga que termina depois não pode substituir a mais recente.
       if (current !== request.current) return;
       setAiNote(null);
-      if (ollama) {
+      const engine = prepareAi ? await prepareAi() : null;
+      if (current !== request.current) return;
+      if (engine) {
         // As sugestões sem internet já aparecem; as da IA chegam depois, no topo.
         setGroups(found);
         setSearchedText(text);
@@ -85,7 +88,7 @@ export function VerseSuggestions({
         );
         if (exclude) skip.add(`${exclude.bookAbbrev}:${exclude.chapter}:${exclude.verse}`);
         try {
-          const items = await aiSuggestVerses(db, ollama, text, skip);
+          const items = await aiSuggestVerses(db, engine, text, skip);
           if (current !== request.current) return;
           if (items.length > 0) {
             setGroups([{ key: 'ai', kind: 'ai', title: 'Sugestões da IA', items }, ...found]);

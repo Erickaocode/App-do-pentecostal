@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { OllamaConfig } from '../ai/ollama';
+import { engineLabel, type AiEngine } from '../ai/engine';
 import { generateOutline, outlineToHtml, verseLabel, type SermonOutline } from '../ai/outline';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,13 +12,22 @@ interface Props {
   noteTitle: string;
   /** O que já está escrito, para a IA seguir a mesma linha. */
   noteText: string;
-  ollama: OllamaConfig | null;
+  engine: AiEngine | null;
+  /** Motor na hora do uso (pode pedir o aceite da pessoa) ou null. */
+  prepareAi: () => Promise<AiEngine | null>;
   onInsertHtml: (html: string) => void;
   onOpenSettings: () => void;
 }
 
 /** "Me dá um esboço": a pessoa escreve o tema e recebe a pregação estruturada com versículos. */
-export function SermonOutlinePanel({ noteTitle, noteText, ollama, onInsertHtml, onOpenSettings }: Props) {
+export function SermonOutlinePanel({
+  noteTitle,
+  noteText,
+  engine,
+  prepareAi,
+  onInsertHtml,
+  onOpenSettings,
+}: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -40,10 +49,12 @@ export function SermonOutlinePanel({ noteTitle, noteText, ollama, onInsertHtml, 
     setWarning(null);
     setInserted(false);
     try {
+      const ready = await prepareAi();
+      if (current !== request.current) return;
       const result = await generateOutline(
         db,
         { title: effectiveTopic, baseText: baseText.trim() || undefined, notes: noteText },
-        ollama
+        ready
       );
       if (current !== request.current) return;
       setOutline(result.outline);
@@ -65,14 +76,14 @@ export function SermonOutlinePanel({ noteTitle, noteText, ollama, onInsertHtml, 
     <View style={styles.container}>
       <Pressable onPress={onOpenSettings} style={styles.mode}>
         <Ionicons
-          name={ollama ? 'hardware-chip-outline' : 'cloud-offline-outline'}
+          name={engine ? 'sparkles' : 'cloud-offline-outline'}
           size={14}
-          color={ollama ? colors.primary : colors.textSecondary}
+          color={engine ? colors.primary : colors.textSecondary}
         />
-        <Text style={[styles.modeText, ollama && styles.modeTextOn]} numberOfLines={2}>
-          {ollama
-            ? `IA ativa: ${ollama.model}`
-            : 'Modo básico (sem IA). Toque para ligar o Ollama e ter esboços completos.'}
+        <Text style={[styles.modeText, !!engine && styles.modeTextOn]} numberOfLines={2}>
+          {engine
+            ? `IA ativa: ${engineLabel(engine)}`
+            : 'Modo básico (sem IA). Toque para ligar a IA e ter esboços completos.'}
         </Text>
       </Pressable>
 
@@ -112,10 +123,10 @@ export function SermonOutlinePanel({ noteTitle, noteText, ollama, onInsertHtml, 
           <Ionicons name={outline ? 'refresh' : 'sparkles'} size={17} color={colors.surface} />
         )}
         <Text style={styles.generateText}>
-          {loading ? (ollama ? 'A IA está escrevendo...' : 'Montando...') : outline ? 'Gerar outro' : 'Gerar esboço'}
+          {loading ? (engine ? 'A IA está escrevendo...' : 'Montando...') : outline ? 'Gerar outro' : 'Gerar esboço'}
         </Text>
       </Pressable>
-      {loading && ollama ? (
+      {loading && engine?.kind === 'ollama' ? (
         <Text style={styles.hint}>No computador, a IA pode levar até um minuto.</Text>
       ) : null}
 
@@ -161,7 +172,7 @@ export function SermonOutlinePanel({ noteTitle, noteText, ollama, onInsertHtml, 
           </Pressable>
           {outline.source === 'offline' ? (
             <Text style={styles.hint}>
-              Esboço básico: um ponto de partida. Com o Ollama ligado, a IA escreve explicações
+              Esboço básico: um ponto de partida. Com a IA ligada, ela escreve explicações
               próprias para o seu tema.
             </Text>
           ) : null}
