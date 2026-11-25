@@ -13,6 +13,7 @@ const MIN_KEYBOARD_PX = 80;
 export function useKeyboardInset(containerRef: RefObject<View | null>) {
   const [inset, setInset] = useState(0);
   const insetRef = useRef(0);
+  const [webOpen, setWebOpen] = useState(false);
 
   useEffect(() => {
     const apply = (value: number) => {
@@ -23,22 +24,13 @@ export function useKeyboardInset(containerRef: RefObject<View | null>) {
     };
 
     if (Platform.OS === 'web') {
-      const viewport = typeof window !== 'undefined' ? window.visualViewport : null;
-      if (!viewport) return;
-      const update = () => {
-        const node = containerRef.current as unknown as HTMLElement | null;
-        if (!node?.getBoundingClientRect) return;
-        // O padding fica dentro da caixa, então a borda de baixo não muda com ele.
-        const bottom = node.getBoundingClientRect().bottom;
-        apply(bottom - (viewport.offsetTop + viewport.height));
-      };
-      viewport.addEventListener('resize', update);
-      viewport.addEventListener('scroll', update);
-      update();
-      return () => {
-        viewport.removeEventListener('resize', update);
-        viewport.removeEventListener('scroll', update);
-      };
+      // Na web o app inteiro já encolhe até a borda do teclado (ver public/index.html),
+      // então não precisa de espaço extra: só saber se o teclado está aberto.
+      return subscribeWebKeyboard((open) => {
+        insetRef.current = 0;
+        setInset(0);
+        setWebOpen(open);
+      });
     }
 
     const onShow = (event: KeyboardEvent) => {
@@ -54,5 +46,42 @@ export function useKeyboardInset(containerRef: RefObject<View | null>) {
     return () => subs.forEach((sub) => sub.remove());
   }, [containerRef]);
 
-  return { inset, keyboardVisible: inset > 0 };
+  return { inset, keyboardVisible: inset > 0 || webOpen };
+}
+
+/**
+ * Teclado aberto na web: a parte visível da tela fica bem menor que a página.
+ * No iPhone a página (innerHeight) não muda com o teclado, só o visualViewport.
+ */
+function webKeyboardOpen(): boolean {
+  const viewport = window.visualViewport;
+  if (!viewport) return false;
+  return window.innerHeight - viewport.height > MIN_KEYBOARD_PX;
+}
+
+function subscribeWebKeyboard(listener: (open: boolean) => void): () => void {
+  const viewport = typeof window !== 'undefined' ? window.visualViewport : null;
+  if (!viewport) return () => {};
+  const update = () => listener(webKeyboardOpen());
+  viewport.addEventListener('resize', update);
+  update();
+  return () => viewport.removeEventListener('resize', update);
+}
+
+/** Só diz se o teclado está aberto (ex.: para esconder a barra de abas). */
+export function useKeyboardOpen(): boolean {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (Platform.OS === 'web') return subscribeWebKeyboard(setOpen);
+    const subs = [
+      Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () =>
+        setOpen(true)
+      ),
+      Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () =>
+        setOpen(false)
+      ),
+    ];
+    return () => subs.forEach((sub) => sub.remove());
+  }, []);
+  return open;
 }

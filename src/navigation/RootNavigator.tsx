@@ -11,6 +11,7 @@ import { NotesListScreen } from '../screens/NotesListScreen';
 import { ReadingScreen } from '../screens/ReadingScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { useTheme } from '../context/ThemeContext';
+import { useKeyboardOpen } from '../hooks/useKeyboardInset';
 import type {
   BibleStackParamList,
   FavoritesStackParamList,
@@ -97,14 +98,19 @@ function FavoritesStackNavigator() {
 
 export function RootNavigator() {
   const { colors } = useTheme();
+  // Com o teclado aberto, as abas saem da frente: o espaço fica para o que se escreve.
+  const keyboardOpen = useKeyboardOpen();
   const tabScreenOptions = useMemo(
     () => ({
       headerShown: false,
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.textSecondary,
-      tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      tabBarHideOnKeyboard: true,
+      tabBarStyle: keyboardOpen
+        ? { display: 'none' as const }
+        : { backgroundColor: colors.surface, borderTopColor: colors.border },
     }),
-    [colors]
+    [colors, keyboardOpen]
   );
 
   return (
