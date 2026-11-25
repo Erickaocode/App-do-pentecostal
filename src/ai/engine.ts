@@ -6,7 +6,7 @@ import { loadOllamaConfig, ollamaChat, OllamaError, type ChatMessage, type Ollam
  * Endereço da ponte da IA na nuvem (Cloudflare Worker em ai-proxy/).
  * Vazio = IA na nuvem desligada no app (sobra o Ollama e o modo básico).
  */
-export const CLOUD_AI_URL = '';
+export const CLOUD_AI_URL = 'https://pentecostal-ia.app-do-pentecostal.workers.dev';
 
 const CLOUD_TIMEOUT_MS = 60_000;
 const MODE_KEY = 'ai_mode';
