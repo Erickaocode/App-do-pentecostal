@@ -106,12 +106,12 @@ export function AssistantSheet({
         <Pressable
           style={styles.barMain}
           onPress={() => onOpenChange(true)}
-          accessibilityLabel="Abrir assistente"
+          accessibilityLabel="Abrir o EKS AI"
         >
           <View style={styles.grabber} />
           <View style={styles.barRow}>
             <Ionicons name="sparkles" size={15} color={colors.primary} />
-            <Text style={styles.barText}>Assistente</Text>
+            <Text style={styles.barText}>EKS AI</Text>
             <Text style={styles.barSub}>versículos · esboço</Text>
             <View style={styles.flex} />
             {status ? <Text style={styles.status}>{status}</Text> : null}

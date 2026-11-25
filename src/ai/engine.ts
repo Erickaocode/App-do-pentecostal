@@ -11,6 +11,7 @@ export const CLOUD_AI_URL = 'https://pentecostal-ia.app-do-pentecostal.workers.d
 const CLOUD_TIMEOUT_MS = 60_000;
 const MODE_KEY = 'ai_mode';
 const CONSENT_KEY = 'ai_cloud_consent';
+const STYLE_KEY = 'ai_style';
 
 export type AiMode = 'cloud' | 'ollama' | 'off';
 
@@ -42,6 +43,15 @@ export function saveCloudConsent(db: SQLiteDatabase): Promise<void> {
   return setSetting(db, CONSENT_KEY, 'yes');
 }
 
+/** "Escrever no meu estilo": a IA lê trechos das anotações antigas da pessoa. */
+export async function loadStyleEnabled(db: SQLiteDatabase): Promise<boolean> {
+  return (await getSetting(db, STYLE_KEY)) === 'yes';
+}
+
+export function saveStyleEnabled(db: SQLiteDatabase, enabled: boolean): Promise<void> {
+  return setSetting(db, STYLE_KEY, enabled ? 'yes' : 'no');
+}
+
 /** O motor certo para o modo escolhido (null = só o modo básico, sem IA). */
 export async function loadAiEngine(db: SQLiteDatabase): Promise<AiEngine | null> {
   const mode = await loadAiMode(db);
@@ -54,7 +64,7 @@ export async function loadAiEngine(db: SQLiteDatabase): Promise<AiEngine | null>
 }
 
 export function engineLabel(engine: AiEngine): string {
-  return engine.kind === 'cloud' ? 'IA na nuvem' : `Ollama: ${engine.config.model}`;
+  return engine.kind === 'cloud' ? 'EKS AI' : `EKS AI via Ollama (${engine.config.model})`;
 }
 
 async function cloudChat(

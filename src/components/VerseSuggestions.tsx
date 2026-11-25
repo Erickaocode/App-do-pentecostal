@@ -91,7 +91,7 @@ export function VerseSuggestions({
           const items = await aiSuggestVerses(db, engine, text, skip);
           if (current !== request.current) return;
           if (items.length > 0) {
-            setGroups([{ key: 'ai', kind: 'ai', title: 'Sugestões da IA', items }, ...found]);
+            setGroups([{ key: 'ai', kind: 'ai', title: 'Sugestões do EKS AI', items }, ...found]);
           }
         } catch (error) {
           if (current === request.current) {

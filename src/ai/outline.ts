@@ -29,6 +29,8 @@ export interface OutlineRequest {
   baseText?: string;
   /** O que já está escrito na anotação, para a IA seguir a mesma linha (opcional). */
   notes?: string;
+  /** Trechos de anotações antigas da pessoa, para a IA imitar o jeito dela pregar (opcional). */
+  style?: string;
 }
 
 /** Mesmo formato das citações inseridas pelas sugestões (as sugestões ignoram essas linhas). */
@@ -128,7 +130,7 @@ interface AiOutline {
   conclusao?: string;
 }
 
-const SYSTEM_PROMPT = `Você é um assistente de pregação para pastores e pregadores pentecostais no Brasil.
+const SYSTEM_PROMPT = `Você é o EKS AI, o assistente de pregação do App do Pentecostal, feito para pastores, pregadores e obreiros pentecostais no Brasil.
 Escreva em português do Brasil, com linguagem bíblica, clara e acolhedora, fiel às Escrituras.
 Monte esboços de pregação prontos para usar no púlpito: introdução, 3 pontos principais (cada um com explicação e versículos de apoio), aplicação prática e conclusão com apelo.
 Use apenas referências bíblicas que existem de verdade, no formato "Livro capítulo:versículo" (ex.: "Romanos 8:28"). Não escreva o texto dos versículos, só a referência.
@@ -139,6 +141,9 @@ function userPrompt(req: OutlineRequest, hints: VerseWithBook[]): string {
     `Tema/título da pregação: "${req.title.trim()}"`,
     req.baseText ? `Texto base escolhido pelo pregador: ${req.baseText}` : '',
     req.notes?.trim() ? `Anotações do pregador (siga esta linha):\n${req.notes.trim().slice(0, 1500)}` : '',
+    req.style?.trim()
+      ? `Trechos de anotações antigas deste pregador. Imite o estilo, o vocabulário e o jeito de organizar as ideias, sem copiar o conteúdo:\n${req.style.trim().slice(0, 2400)}`
+      : '',
     hints.length
       ? `Versículos que combinam com o tema (use se fizer sentido):\n${hints.map(verseLabel).join(', ')}`
       : '',

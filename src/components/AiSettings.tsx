@@ -23,14 +23,14 @@ const OPTIONS: {
   {
     mode: 'cloud',
     icon: 'cloud-outline',
-    title: 'IA na nuvem (recomendado)',
+    title: 'EKS AI na nuvem (recomendado)',
     description:
-      'Grátis e sem configurar nada. Precisa de internet. Quando você pede ajuda, o texto vai para a IA só para gerar a resposta.',
+      'Sem configurar nada. Precisa de internet. Quando você pede ajuda, o texto vai para a IA (Google Gemini) só para gerar a resposta.',
   },
   {
     mode: 'ollama',
     icon: 'desktop-outline',
-    title: 'Ollama no meu computador',
+    title: 'EKS AI no meu computador (Ollama)',
     description: 'A IA roda no seu PC e o texto não sai da sua rede. Precisa do Ollama instalado.',
   },
   {
