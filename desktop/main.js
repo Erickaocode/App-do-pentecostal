@@ -159,6 +159,41 @@ ipcMain.handle('holyrics-request', (_event, url, body) => {
   });
 });
 
+// Ollama (IA local): só GET/POST para /api/ do endereço que a pessoa configurou.
+// Tempo maior que o do Holyrics: um esboço inteiro pode levar minutos num PC comum.
+ipcMain.handle('ollama-request', (_event, url, method, body) => {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      reject(new Error('Endereço inválido'));
+      return;
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.pathname.startsWith('/api/')) {
+      reject(new Error('Endereço do Ollama inválido'));
+      return;
+    }
+    if (method !== 'GET' && method !== 'POST') {
+      reject(new Error('Método inválido'));
+      return;
+    }
+    const client = parsed.protocol === 'https:' ? https : http;
+    const headers = body
+      ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+      : {};
+    const req = client.request(parsed, { method, headers, timeout: 180000 }, (res) => {
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => resolve({ status: res.statusCode || 0, body: data }));
+    });
+    req.on('timeout', () => req.destroy(new Error('Tempo esgotado')));
+    req.on('error', reject);
+    req.end(body || undefined);
+  });
+});
+
 function injectUpdateButton() {
   if (!mainWindow) return;
   mainWindow.webContents
