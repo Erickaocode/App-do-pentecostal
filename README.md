@@ -6,7 +6,7 @@
 
 **Leia a Bíblia, grife versículos, favorite e anote suas reflexões, sem internet.**
 
-![Versão](https://img.shields.io/badge/vers%C3%A3o-1.5.1-E8590C)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.6.0-E8590C)
 
 ![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)
 ![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white)
