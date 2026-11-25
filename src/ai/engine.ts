@@ -63,6 +63,22 @@ export async function loadAiEngine(db: SQLiteDatabase): Promise<AiEngine | null>
   return null;
 }
 
+/** O EKS AI na nuvem está respondendo? Devolve o modelo em uso, ou null se estiver fora. */
+export async function checkCloudHealth(): Promise<string | null> {
+  if (!cloudAvailable) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`${CLOUD_AI_URL.replace(/\/+$/, '')}/health`, { signal: controller.signal });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; model?: string } | null;
+    return res.ok && data?.ok ? data.model ?? 'online' : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function engineLabel(engine: AiEngine): string {
   return engine.kind === 'cloud' ? 'EKS AI' : `EKS AI via Ollama (${engine.config.model})`;
 }
