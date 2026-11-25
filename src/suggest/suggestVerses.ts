@@ -22,7 +22,7 @@ export interface SuggestionItem {
 
 export interface SuggestionGroup {
   key: string;
-  kind: 'reference' | 'theme' | 'person' | 'words';
+  kind: 'ai' | 'reference' | 'theme' | 'person' | 'words';
   title: string;
   items: SuggestionItem[];
 }

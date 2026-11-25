@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
+import { aiSuggestVerses } from '../ai/aiSuggest';
+import type { OllamaConfig } from '../ai/ollama';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import type { VerseWithBook } from '../db/bibleQueries';
@@ -11,6 +13,7 @@ import type { ThemeColors } from '../theme';
 const MIN_TEXT_LENGTH = 12;
 
 const GROUP_ICONS: Record<SuggestionGroup['kind'], keyof typeof Ionicons.glyphMap> = {
+  ai: 'sparkles',
   theme: 'pricetag-outline',
   person: 'person-outline',
   reference: 'link-outline',
@@ -27,6 +30,8 @@ interface Props {
   onOpen: (verse: VerseWithBook) => void;
   /** Muda a cada toque no botão de sugestões do topo da tela, que pede uma busca. */
   suggestSignal?: number;
+  /** Com o Ollama configurado, a IA também lê o texto e indica versículos pelo sentido. */
+  ollama?: OllamaConfig | null;
 }
 
 export function VerseSuggestions({
@@ -36,12 +41,14 @@ export function VerseSuggestions({
   onInsert,
   onOpen,
   suggestSignal = 0,
+  ollama = null,
 }: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [groups, setGroups] = useState<SuggestionGroup[]>([]);
   const [loading, setLoading] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
   // Texto usado na última busca: se a pessoa continuar escrevendo, o botão oferece atualizar.
   const [searchedText, setSearchedText] = useState<string | null>(null);
   const request = useRef(0);
@@ -68,6 +75,28 @@ export function VerseSuggestions({
       const found = await suggestVerses(db, text, { exclude });
       // Uma busca antiga que termina depois não pode substituir a mais recente.
       if (current !== request.current) return;
+      setAiNote(null);
+      if (ollama) {
+        // As sugestões sem internet já aparecem; as da IA chegam depois, no topo.
+        setGroups(found);
+        setSearchedText(text);
+        const skip = new Set(
+          found.flatMap((g) => g.items.map(({ verse: v }) => `${v.book_abbrev}:${v.chapter}:${v.verse}`))
+        );
+        if (exclude) skip.add(`${exclude.bookAbbrev}:${exclude.chapter}:${exclude.verse}`);
+        try {
+          const items = await aiSuggestVerses(db, ollama, text, skip);
+          if (current !== request.current) return;
+          if (items.length > 0) {
+            setGroups([{ key: 'ai', kind: 'ai', title: 'Sugestões da IA', items }, ...found]);
+          }
+        } catch (error) {
+          if (current === request.current) {
+            setAiNote((error as Error).message || 'A IA não respondeu agora.');
+          }
+        }
+        return;
+      }
       setGroups(found);
       setSearchedText(text);
     } catch {
@@ -130,6 +159,8 @@ export function VerseSuggestions({
         </Pressable>
       ) : null}
 
+      {aiNote ? <Text style={styles.aiNote}>IA: {aiNote}</Text> : null}
+
       {searched && !loading && visible.length === 0 ? (
         <Text style={styles.hint}>
           Não encontramos versículos para este texto. Tente contar um pouco mais.
@@ -171,13 +202,8 @@ export function VerseSuggestions({
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: {
-      marginTop: 20,
-      paddingTop: 16,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
-      gap: 10,
-    },
+    container: { gap: 10 },
+    aiNote: { fontSize: 12, color: colors.danger, lineHeight: 17 },
     header: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     title: {
       flex: 1,
