@@ -2,14 +2,14 @@
  * Ponte da IA do App do Pentecostal (Cloudflare Worker).
  *
  * O app manda { messages, json } para POST /chat; a ponte acrescenta a chave secreta e
- * repassa para uma API no padrão OpenAI (Groq por padrão). Assim a chave nunca fica
+ * repassa para uma API no padrão OpenAI (hoje o Google Gemini, o mesmo cérebro do EKS AI). Assim a chave nunca fica
  * dentro do app, e trocar de provedor é só mudar AI_BASE_URL / AI_MODEL no wrangler.toml.
  *
  * Nada é guardado aqui: a ponte não grava nem registra o texto das anotações.
  */
 
 const MAX_INPUT_CHARS = 14000;
-const MAX_OUTPUT_TOKENS = 1800;
+const MAX_OUTPUT_TOKENS = 4000;
 
 /** Sites que podem chamar a ponte pelo navegador. O app de celular não manda "Origin". */
 const ALLOWED_ORIGINS = [
@@ -81,20 +81,33 @@ export default {
     if (messages.length === 0) return reply(400, { error: 'Pedido sem mensagens.' }, cors);
     if (size > MAX_INPUT_CHARS) return reply(413, { error: 'Texto grande demais para a IA.' }, cors);
 
-    const upstream = await fetch(`${env.AI_BASE_URL.replace(/\/+$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.AI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: env.AI_MODEL,
-        messages,
-        temperature: typeof input.temperature === 'number' ? Math.min(Math.max(input.temperature, 0), 1.2) : 0.6,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        ...(input.json ? { response_format: { type: 'json_object' } } : {}),
-      }),
-    }).catch(() => null);
+    // Modelo principal e reservas: se um estiver sobrecarregado (503) ou sumir (404), tenta o próximo.
+    const models = [env.AI_MODEL, ...String(env.AI_FALLBACK_MODELS || '').split(',')]
+      .map((m) => m && m.trim())
+      .filter(Boolean);
+    const temperature =
+      typeof input.temperature === 'number' ? Math.min(Math.max(input.temperature, 0), 1.2) : 0.6;
+
+    let upstream = null;
+    for (const model of models) {
+      upstream = await fetch(`${env.AI_BASE_URL.replace(/\/+$/, '')}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.AI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature,
+          max_tokens: MAX_OUTPUT_TOKENS,
+          // Gemini "pensa" antes de responder e isso gasta o limite da resposta.
+          ...(env.AI_REASONING_EFFORT ? { reasoning_effort: env.AI_REASONING_EFFORT } : {}),
+          ...(input.json ? { response_format: { type: 'json_object' } } : {}),
+        }),
+      }).catch(() => null);
+      if (upstream && ![404, 500, 503].includes(upstream.status)) break;
+    }
 
     if (!upstream) return reply(502, { error: 'A IA está fora do ar agora.' }, cors);
     if (upstream.status === 429) {

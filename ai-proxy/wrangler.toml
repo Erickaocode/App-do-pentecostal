@@ -3,10 +3,14 @@ main = "worker.js"
 compatibility_date = "2025-06-01"
 
 [vars]
-# Qualquer API no padrão OpenAI. Groq (grátis): https://api.groq.com/openai/v1
-AI_BASE_URL = "https://api.groq.com/openai/v1"
-# Confira os modelos disponíveis em console.groq.com/docs/models
-AI_MODEL = "llama-3.3-70b-versatile"
+# EKS AI: o mesmo cérebro do assistente de desktop (Google Gemini), pela API no padrão OpenAI.
+# Para trocar de provedor (ex.: Groq), basta mudar estas linhas.
+AI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+AI_MODEL = "gemini-3.6-flash"
+# Reservas, na ordem, quando o principal estiver sobrecarregado.
+AI_FALLBACK_MODELS = "gemini-3.8-flash,gemini-3.7-flash,gemini-flash-latest,gemini-3.5-flash"
+# Sem "modo pensar": respostas mais rápidas e sem cortar o texto.
+AI_REASONING_EFFORT = "none"
 # A chave NÃO fica aqui: npx wrangler secret put AI_API_KEY
 
 # Até 8 pedidos por minuto por aparelho (IP).
