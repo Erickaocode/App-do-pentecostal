@@ -10,6 +10,7 @@
 <meta property="og:description" content="Sua Bíblia, sempre por perto. Leitura offline, anotações com sugestões de versículos, cronômetro de pregação e projeção no Holyrics.">
 <meta property="og:image" content="../assets/screenshots/devices.png">
 <link rel="icon" href="../assets/favicon.png">
+<script>document.documentElement.classList.add('intro-on');</script>
 <style>
   :root {
     --bg: #FAF6F0;
@@ -55,30 +56,101 @@
     }
   }
 
-  /* Abertura com a chama */
+  /* Abertura: a Bíblia se abre, a chama sobe, a cruz acende e o nome aparece. */
   .intro {
-    position: fixed; inset: 0; z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    background: linear-gradient(160deg, var(--bg), var(--bg-deep));
-    transition: opacity .6s ease, visibility .6s ease;
+    position: fixed; inset: 0; z-index: 9999; overflow: hidden; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: radial-gradient(ellipse at 50% 42%, #FFF8EE 0%, var(--bg) 45%, var(--bg-deep) 100%);
+    transition: opacity .8s ease, visibility .8s ease;
   }
   .intro.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  .intro-flame { width: 68px; height: 92px; animation: introPop .7s cubic-bezier(.34, 1.56, .64, 1) both, flameGlow 1.6s ease-in-out .7s infinite; }
-  .flame-svg { width: 100%; height: 100%; display: block; transform-origin: 50% 100%; animation: flameFlicker 1.6s ease-in-out infinite; }
-  .intro-title { font-family: Georgia, serif; font-weight: 700; color: var(--primary-dark); font-size: 18px; animation: fadeUp .6s ease .3s both; }
-  @keyframes introPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+  .intro-stage { position: relative; display: flex; flex-direction: column; align-items: center; transition: transform .8s cubic-bezier(.4, 0, .2, 1), filter .8s ease; }
+  .intro.hide .intro-stage { transform: scale(1.08) translateY(-10px); filter: blur(6px); }
+
+  /* Luz quente atrás da chama */
+  .intro-glow {
+    position: absolute; left: 50%; top: 36%; width: 420px; height: 420px; margin: -210px 0 0 -210px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 176, 66, .55) 0%, rgba(240, 146, 46, .22) 35%, rgba(240, 146, 46, 0) 70%);
+    opacity: 0; transform: scale(.4);
+    animation: glowIn 1s ease .9s forwards, glowPulse 2.4s ease-in-out 1.9s infinite;
+  }
+  .intro-rays {
+    position: absolute; left: 50%; top: 36%; width: 560px; height: 560px; margin: -280px 0 0 -280px; border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgba(240, 146, 46, .10) 0deg 6deg, rgba(240, 146, 46, 0) 6deg 22deg);
+    -webkit-mask: radial-gradient(circle, #000 0%, transparent 65%); mask: radial-gradient(circle, #000 0%, transparent 65%);
+    opacity: 0; animation: raysIn 1.2s ease 1.3s forwards, raysSpin 40s linear 1.3s infinite;
+  }
+
+  .intro-mark { position: relative; width: 210px; height: 210px; overflow: visible; }
+  .intro-mark * { transform-box: view-box; }
+
+  /* Bíblia: o contorno se desenha do centro para fora e depois ganha cor. */
+  .book-part { fill: var(--primary-dark); fill-opacity: 0; stroke: var(--primary-dark); stroke-width: 2.5; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .7s cubic-bezier(.6, 0, .3, 1) .15s forwards, fillIn .35s ease .7s forwards; }
+  .book-page { fill: none; stroke: var(--primary-dark); stroke-width: 3.5; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s cubic-bezier(.6, 0, .3, 1) .35s forwards; }
+
+  /* Chama: três línguas de fogo sobem de dentro da Bíblia. */
+  .flame-rise { transform-origin: 100px 156px; transform: scale(.1, 0); opacity: 0; }
+  .flame-main { animation: rise .75s cubic-bezier(.34, 1.4, .64, 1) .8s forwards; }
+  .flame-inner { animation: rise .65s cubic-bezier(.34, 1.4, .64, 1) .98s forwards; }
+  .flame-right { animation: rise .6s cubic-bezier(.34, 1.4, .64, 1) 1.08s forwards; }
+  .flame-flicker { transform-origin: 100px 156px; animation: flicker 2.2s ease-in-out 1.7s infinite; }
+  .flame-swirl { fill: none; stroke: #FDF3E6; stroke-width: 4.5; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s ease 1.25s forwards; }
+
+  /* Cruz: acende em luz, primeiro a haste, depois a trave. */
+  .cross-part { fill: none; stroke: #FFF8EE; stroke-width: 6.5; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .cross-v { animation: draw .35s ease-out 1.4s forwards; }
+  .cross-h { animation: draw .3s ease-out 1.65s forwards; }
+  .cross-glow { filter: drop-shadow(0 0 0 rgba(255, 236, 200, 0)); animation: crossShine 1s ease 1.8s forwards; }
+
+  /* Brasas subindo da chama */
+  .embers { position: absolute; left: 50%; top: 40%; width: 0; height: 0; }
+  .embers i {
+    position: absolute; left: var(--x); top: 0; width: var(--s); height: var(--s); border-radius: 50%;
+    background: radial-gradient(circle, #FFE3A3 0%, #F0922E 60%, rgba(240, 146, 46, 0) 100%);
+    opacity: 0; animation: ember var(--d) ease-out calc(1.2s + var(--delay)) infinite;
+  }
+
+  /* Nome: "App do" sobe; "Pentecostal" aparece letra por letra; o lema, palavra por palavra. */
+  .intro-name { position: relative; text-align: center; margin-top: 6px; }
+  .intro-app { display: block; font-size: 22px; letter-spacing: .02em; color: var(--primary-dark); opacity: 0; animation: fadeUp .6s ease 1.55s forwards; }
+  .intro-word { display: block; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-size: clamp(34px, 8vw, 46px); line-height: 1.05; color: #4E260A; }
+  .intro-word span { display: inline-block; opacity: 0; transform: translateY(14px) scale(.9); animation: letterIn .5s cubic-bezier(.34, 1.4, .64, 1) calc(1.7s + var(--i) * 45ms) forwards; }
+  .intro-tag { display: flex; justify-content: center; gap: 12px; margin-top: 12px; font-size: 12px; font-weight: 600; letter-spacing: .32em; color: var(--primary-dark); }
+  .intro-tag span { opacity: 0; animation: fadeUp .5s ease forwards; }
+  .intro-tag span:nth-child(1) { animation-delay: 2.05s; }
+  .intro-tag span:nth-child(2) { animation-delay: 2.15s; color: var(--flame); }
+  .intro-tag span:nth-child(3) { animation-delay: 2.25s; }
+  .intro-tag span:nth-child(4) { animation-delay: 2.35s; color: var(--flame); }
+  .intro-tag span:nth-child(5) { animation-delay: 2.45s; }
+  .intro-skip { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--text-secondary); opacity: 0; animation: fadeUp .5s ease 1.2s forwards; }
+
   @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-  @keyframes flameFlicker {
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes fillIn { to { fill-opacity: 1; } }
+  @keyframes rise { 0% { opacity: 0; transform: scale(.1, 0); } 40% { opacity: 1; } 100% { opacity: 1; transform: scale(1, 1); } }
+  @keyframes flicker {
     0%, 100% { transform: scale(1, 1) skewX(0deg); }
-    20% { transform: scale(.96, 1.04) skewX(-2deg); }
-    40% { transform: scale(1.04, .95) skewX(2deg); }
-    60% { transform: scale(.97, 1.03) skewX(-1deg); }
-    80% { transform: scale(1.03, .97) skewX(1.5deg); }
+    25% { transform: scale(.98, 1.03) skewX(-1.5deg); }
+    50% { transform: scale(1.02, .98) skewX(1.2deg); }
+    75% { transform: scale(.99, 1.02) skewX(-.6deg); }
   }
-  @keyframes flameGlow {
-    0%, 100% { filter: drop-shadow(0 10px 18px rgba(217, 113, 29, .35)); }
-    50% { filter: drop-shadow(0 14px 30px rgba(240, 146, 46, .55)); }
+  @keyframes crossShine { to { filter: drop-shadow(0 0 6px rgba(255, 236, 200, .95)); } }
+  @keyframes glowIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes glowPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .75; transform: scale(1.08); } }
+  @keyframes raysIn { to { opacity: 1; } }
+  @keyframes raysSpin { to { transform: rotate(360deg); } }
+  @keyframes letterIn { to { opacity: 1; transform: none; } }
+  @keyframes ember {
+    0% { opacity: 0; transform: translate(0, 0) scale(1); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), -150px) scale(.3); }
   }
+
+  /* O topo do site só anima quando a abertura sai da frente. */
+  .intro-on .hero, .intro-on .hero * { animation-name: none !important; }
 
   /* Aparecer ao rolar */
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
@@ -325,21 +397,67 @@
 
   <noscript><style>.intro{display:none} .reveal{opacity:1!important;transform:none!important}</style></noscript>
 
-  <div class="intro" id="intro">
-    <div class="intro-flame">
-      <svg class="flame-svg" viewBox="0 0 64 88" aria-hidden="true">
+  <div class="intro" id="intro" role="presentation" aria-hidden="true">
+    <div class="intro-rays"></div>
+    <div class="intro-glow"></div>
+    <div class="embers">
+      <i style="--x:-18px;--s:5px;--d:1.6s;--delay:0s;--dx:-14px"></i>
+      <i style="--x:12px;--s:4px;--d:1.9s;--delay:0.3s;--dx:10px"></i>
+      <i style="--x:-4px;--s:6px;--d:1.7s;--delay:0.6s;--dx:-4px"></i>
+      <i style="--x:22px;--s:3px;--d:2.1s;--delay:0.15s;--dx:22px"></i>
+      <i style="--x:-26px;--s:4px;--d:2.0s;--delay:0.9s;--dx:-20px"></i>
+      <i style="--x:4px;--s:3px;--d:1.5s;--delay:1.2s;--dx:8px"></i>
+      <i style="--x:-10px;--s:5px;--d:2.2s;--delay:0.45s;--dx:-12px"></i>
+      <i style="--x:16px;--s:4px;--d:1.8s;--delay:0.75s;--dx:16px"></i>
+      <i style="--x:0px;--s:3px;--d:2.3s;--delay:1.05s;--dx:-2px"></i>
+      <i style="--x:-20px;--s:3px;--d:1.6s;--delay:1.35s;--dx:-26px"></i>
+    </div>
+    <div class="intro-stage">
+      <svg class="intro-mark" viewBox="0 0 200 200">
         <defs>
-          <linearGradient id="flameGradient" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stop-color="#B3452F"/>
-            <stop offset="45%" stop-color="#D9711D"/>
-            <stop offset="75%" stop-color="#F0922E"/>
-            <stop offset="100%" stop-color="#F5D76E"/>
+          <linearGradient id="flameMain" x1="0" y1="1" x2="0.3" y2="0">
+            <stop offset="0%" stop-color="#C9540F"/>
+            <stop offset="45%" stop-color="#E9801F"/>
+            <stop offset="100%" stop-color="#F9B13F"/>
+          </linearGradient>
+          <linearGradient id="flameSide" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#D9711D"/>
+            <stop offset="100%" stop-color="#FBC266"/>
           </linearGradient>
         </defs>
-        <path fill="url(#flameGradient)" d="M32 2C20 20 8 34 8 54a24 24 0 0 0 48 0c0-12-8-20-12-28 2 10-4 16-10 16-7 0-11-6-11-14 0-10 7-18 9-26z"/>
+
+        <!-- Chama (atrás da Bíblia, nasce dela) -->
+        <g class="flame-flicker">
+          <g class="flame-rise flame-main">
+            <path fill="url(#flameMain)" d="M100 152C64 150 42 126 44 98c2-26 22-40 34-56 8-11 12-22 10-34 22 14 32 34 30 54 12-6 18-16 18-28 18 20 26 48 20 74-6 26-28 42-56 44z"/>
+          </g>
+          <g class="flame-rise flame-inner">
+            <path fill="url(#flameSide)" d="M104 150c-16-14-18-34-6-50 10-14 18-26 16-44 18 18 28 42 24 64-4 18-16 28-34 30z"/>
+            <path class="flame-swirl" pathLength="1" d="M102 150c-16-14-18-34-6-50 10-14 18-26 16-44"/>
+          </g>
+          <g class="flame-rise flame-right">
+            <path fill="url(#flameSide)" opacity=".85" d="M138 148c18-10 26-28 22-50-4 10-10 16-18 18 2 12 0 22-4 32z"/>
+          </g>
+          <g class="cross-glow">
+            <path class="cross-part cross-v" pathLength="1" d="M118 94v52"/>
+            <path class="cross-part cross-h" pathLength="1" d="M107 109h22"/>
+          </g>
+        </g>
+
+        <!-- Bíblia aberta -->
+        <path class="book-part" pathLength="1" d="M100 176c-18-12-44-16-80-12l14-18c32-4 54 0 66 12z"/>
+        <path class="book-part" pathLength="1" d="M100 176c18-12 44-16 80-12l-14-18c-32-4-54 0-66 12z"/>
+        <path class="book-page" pathLength="1" d="M98 152c-14-10-34-14-58-12"/>
+        <path class="book-page" pathLength="1" d="M102 152c14-10 34-14 58-12"/>
       </svg>
+
+      <div class="intro-name">
+        <span class="intro-app">App do</span>
+        <span class="intro-word" aria-label="Pentecostal"><span style="--i:0">P</span><span style="--i:1">e</span><span style="--i:2">n</span><span style="--i:3">t</span><span style="--i:4">e</span><span style="--i:5">c</span><span style="--i:6">o</span><span style="--i:7">s</span><span style="--i:8">t</span><span style="--i:9">a</span><span style="--i:10">l</span></span>
+        <div class="intro-tag"><span>LEIA</span><span>·</span><span>ORE</span><span>·</span><span>CRESÇA</span></div>
+      </div>
     </div>
-    <div class="intro-title">App do Pentecostal</div>
+    <div class="intro-skip">Toque para entrar</div>
   </div>
 
   <header id="header">
@@ -620,10 +738,25 @@
     };
 
     (function () {
+      // Abertura: sai quando a animação termina e a página já carregou (ou num toque).
       var intro = document.getElementById('intro');
-      function hideIntro() { if (intro) intro.classList.add('hide'); }
-      if (document.readyState === 'complete') setTimeout(hideIntro, 700);
-      else window.addEventListener('load', function () { setTimeout(hideIntro, 700); });
+      var root = document.documentElement;
+      var started = Date.now();
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var MIN_MS = reduce ? 300 : 3700;
+      var hidden = false;
+      function hideIntro() {
+        if (hidden || !intro) return;
+        hidden = true;
+        intro.classList.add('hide');
+        root.classList.remove('intro-on');
+        setTimeout(function () { intro.remove(); }, 900);
+      }
+      function hideWhenReady() { setTimeout(hideIntro, Math.max(0, MIN_MS - (Date.now() - started))); }
+      if (document.readyState === 'complete') hideWhenReady();
+      else window.addEventListener('load', hideWhenReady);
+      setTimeout(hideIntro, 7000); // nunca prende a pessoa se algo não carregar
+      if (intro) intro.addEventListener('click', hideIntro);
 
       // Contatos
       var msg = 'Olá! Vi o site do App do Pentecostal e quero saber mais.';
