@@ -6,12 +6,16 @@
 //   sem conexão, usa a cópia guardada.
 // - Os outros arquivos têm o conteúdo no nome (index-abc123.js), então a cópia
 //   guardada nunca fica velha.
-const VERSION = '251fdb147664';
+const VERSION = 'fe847c37cfb4';
 const PRECACHE = [
   "./",
-  "_expo/static/js/web/index-681380185885e2dd3ec1e96d0e6b73f1.js",
-  "_expo/static/js/web/worker-c785b458a0de71a9173399544dcc293a.js",
+  "_expo/static/js/web/index-4be901091e2c5f248a8099ba4d385096.js",
+  "_expo/static/js/web/worker-1b63b2f6596eaee245143d92fbc73d51.js",
   "apple-touch-icon.png",
+  "assets/assets/eks/badge.a70b92bff27f4cc445f2600c23c892f8.png",
+  "assets/assets/eks/mark-p1.01386b3a97bbbb53f5d504b23fb5f217.png",
+  "assets/assets/eks/mark-p2.dfe98c0d28bfa617d07d98ca01605e64.png",
+  "assets/assets/eks/mark-p3.a4f0c3c8ffefb4d2773f55035a66057a.png",
   "assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
   "assets/node_modules/@react-navigation/elements/lib/module/assets/back-icon-mask.0a328cd9c1afd0afe8e3b1ec5165b1b4.png",
   "assets/node_modules/@react-navigation/elements/lib/module/assets/back-icon.35ba0eaec5a4f5ed12ca16fabeae451d.png",
