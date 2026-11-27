@@ -542,6 +542,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
                 ollama={ollama}
                 onOllamaChange={handleOllamaChange}
                 onTypingChange={setSheetTyping}
+                active={assistantOpen && assistantTab === 'ai'}
               />
             ),
           },

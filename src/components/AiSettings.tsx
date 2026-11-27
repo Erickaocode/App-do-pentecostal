@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { checkCloudHealth, cloudAvailable, type AiMode } from '../ai/engine';
 import type { OllamaConfig } from '../ai/ollama';
+import { EksMark } from './EksLogo';
 import { OllamaSettings } from './OllamaSettings';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   ollama: OllamaConfig | null;
   onOllamaChange: (config: OllamaConfig | null) => void;
   onTypingChange?: (typing: boolean) => void;
+  /** A aba está na tela: a logo se monta de novo toda vez que ela aparece. */
+  active?: boolean;
 }
 
 /** Cores da marca EKS AI (iguais às do assistente de desktop), em qualquer tema do app. */
@@ -48,30 +51,15 @@ const SKILLS: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
   { icon: 'person-outline', label: 'No seu estilo' },
 ];
 
-/** A "marca" do EKS AI: anel dourado com o ponto no meio. */
-function EksMark({ size = 34 }: { size?: number }) {
-  const ring = Math.max(3, Math.round(size * 0.08));
-  const dot = Math.round(size * 0.38);
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: ring,
-        borderColor: EKS.gold,
-        backgroundColor: EKS.surface,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <View style={{ width: dot, height: dot, borderRadius: dot / 2, backgroundColor: EKS.gold }} />
-    </View>
-  );
-}
-
 /** Painel do EKS AI: status ao vivo, o que ele faz e onde ele roda (nuvem, PC ou desligado). */
-export function AiSettings({ mode, onModeChange, ollama, onOllamaChange, onTypingChange }: Props) {
+export function AiSettings({
+  mode,
+  onModeChange,
+  ollama,
+  onOllamaChange,
+  onTypingChange,
+  active = true,
+}: Props) {
   const [health, setHealth] = useState<{ checking: boolean; model: string | null }>({
     checking: true,
     model: null,
@@ -109,7 +97,7 @@ export function AiSettings({ mode, onModeChange, ollama, onOllamaChange, onTypin
       <View style={styles.card}>
         <View style={styles.glow} />
         <View style={styles.brandRow}>
-          <EksMark />
+          <EksMark size={42} animated={active} />
           <Text style={styles.wordmark}>
             EKS <Text style={styles.wordmarkAi}>AI</Text>
           </Text>
