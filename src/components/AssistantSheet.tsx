@@ -29,6 +29,8 @@ interface Props {
   onTabChange: (key: string) => void;
   /** Com o teclado aberto o assistente some inteiro (nem a barrinha aparece). */
   hidden?: boolean;
+  /** Ocupa a tela toda (ex.: digitando num campo dele com o teclado aberto). */
+  expanded?: boolean;
   /** Texto pequeno na barrinha fechada, ex.: "Salvo". */
   status?: string;
   /** Aumenta quando o conteúdo deve voltar ao topo (ex.: nova busca). */
@@ -50,6 +52,7 @@ export function AssistantSheet({
   activeTab,
   onTabChange,
   hidden,
+  expanded,
   status,
   scrollSignal = 0,
 }: Props) {
@@ -95,12 +98,11 @@ export function AssistantSheet({
     [drag, onOpenChange]
   );
 
-  if (hidden) return null;
-
+  // Escondido continua montado: desmontar apagaria o que a pessoa digitou no esboço.
   if (!open) {
     return (
       <Animated.View
-        style={[styles.bar, { transform: [{ translateY: drag }] }]}
+        style={[styles.bar, hidden && styles.gone, { transform: [{ translateY: drag }] }]}
         {...pan.panHandlers}
       >
         <Pressable
@@ -123,7 +125,14 @@ export function AssistantSheet({
   }
 
   return (
-    <Animated.View style={[styles.sheet, { transform: [{ translateY: drag }] }]}>
+    <Animated.View
+      style={[
+        styles.sheet,
+        expanded && styles.sheetExpanded,
+        hidden && styles.gone,
+        { transform: [{ translateY: drag }] },
+      ]}
+    >
       {/* Área de arrastar: puxe para baixo para tirar o assistente da frente. */}
       <View {...pan.panHandlers} style={styles.handleArea}>
         <View style={styles.grabber} />
@@ -157,7 +166,7 @@ export function AssistantSheet({
 
       <ScrollView
         ref={scrollRef}
-        style={styles.scroll}
+        style={expanded ? styles.scrollExpanded : styles.scroll}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -235,7 +244,10 @@ function createStyles(colors: ThemeColors) {
       justifyContent: 'center',
       backgroundColor: colors.surfaceAlt,
     },
+    sheetExpanded: { maxHeight: '100%', flex: 1 },
+    gone: { display: 'none' },
     scroll: { flexGrow: 0 },
+    scrollExpanded: { flex: 1 },
     content: { paddingHorizontal: 16, paddingBottom: 20, paddingTop: 4 },
     hiddenTab: { display: 'none' },
   });
