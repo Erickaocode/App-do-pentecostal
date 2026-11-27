@@ -68,13 +68,38 @@
         if (!vv) return;
         var style = document.documentElement.style;
         function update() {
-          style.setProperty('--vv-height', vv.height + 'px');
-          style.setProperty('--vv-top', vv.offsetTop + 'px');
-          // O iPhone rola a página para mostrar o campo; com o app preso isso só desalinha.
-          if (window.scrollY !== 0 && vv.offsetTop === 0) window.scrollTo(0, 0);
+          var keyboardOpen = window.innerHeight - vv.height > 80;
+          if (keyboardOpen) {
+            style.setProperty('--vv-height', vv.height + 'px');
+            style.setProperty('--vv-top', vv.offsetTop + 'px');
+          } else {
+            // Teclado fechado: tela cheia de novo. O iPhone às vezes "esquece" a altura
+            // antiga e deixaria uma faixa vazia embaixo.
+            style.removeProperty('--vv-height');
+            style.removeProperty('--vv-top');
+            if (window.scrollY !== 0) window.scrollTo(0, 0);
+          }
         }
-        vv.addEventListener('resize', update);
-        vv.addEventListener('scroll', update);
+        // O teclado sobe animando e o iPhone avisa a altura final com atraso: segue a tela
+        // quadro a quadro por um instante para não abrir vão entre o app e o teclado.
+        var followUntil = 0;
+        function follow() {
+          update();
+          if (Date.now() < followUntil) requestAnimationFrame(follow);
+        }
+        function settle() {
+          var running = Date.now() < followUntil;
+          followUntil = Date.now() + 700;
+          if (!running) requestAnimationFrame(follow);
+        }
+        vv.addEventListener('resize', settle);
+        vv.addEventListener('scroll', settle);
+        window.addEventListener('resize', settle);
+        document.addEventListener('focusin', settle);
+        document.addEventListener('focusout', function () {
+          settle();
+          setTimeout(settle, 300);
+        });
         update();
         // Pinça (zoom) no iPhone: o Safari ignora o user-scalable em alguns casos.
         document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
