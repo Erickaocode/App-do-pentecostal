@@ -15,8 +15,13 @@ const STYLE_KEY = 'ai_style';
 
 export type AiMode = 'cloud' | 'ollama' | 'off';
 
-/** Quem responde quando o app pede ajuda à IA. */
-export type AiEngine = { kind: 'cloud' } | { kind: 'ollama'; config: OllamaConfig };
+/**
+ * Quem responde quando o app pede ajuda à IA. Na nuvem, `backup` é o Ollama da pessoa (se
+ * ela configurou um): ele assume quando o EKS AI na nuvem não responde ou fica sem cota.
+ */
+export type AiEngine =
+  | { kind: 'cloud'; backup?: OllamaConfig }
+  | { kind: 'ollama'; config: OllamaConfig };
 
 export const cloudAvailable = CLOUD_AI_URL.length > 0;
 
@@ -59,7 +64,10 @@ export async function loadAiEngine(db: SQLiteDatabase): Promise<AiEngine | null>
     const config = await loadOllamaConfig(db);
     return config ? { kind: 'ollama', config } : null;
   }
-  if (mode === 'cloud' && cloudAvailable) return { kind: 'cloud' };
+  if (mode === 'cloud' && cloudAvailable) {
+    const backup = await loadOllamaConfig(db).catch(() => null);
+    return backup ? { kind: 'cloud', backup } : { kind: 'cloud' };
+  }
   return null;
 }
 
@@ -97,12 +105,12 @@ async function cloudChat(
       signal: controller.signal,
     });
     const data = (await res.json().catch(() => null)) as { content?: string; error?: string } | null;
-    if (!res.ok) throw new AiError(data?.error || `A IA respondeu com erro (${res.status}).`);
+    if (!res.ok) throw new AiError(data?.error || `O EKS AI respondeu com erro (${res.status}).`);
     return data?.content ?? '';
   } catch (error) {
     if (error instanceof AiError) throw error;
-    if ((error as Error)?.name === 'AbortError') throw new AiError('A IA demorou demais para responder.');
-    throw new AiError('Sem conexão com a IA. Confira a internet.');
+    if ((error as Error)?.name === 'AbortError') throw new AiError('O EKS AI demorou demais para responder.');
+    throw new AiError('Sem conexão com o EKS AI. Confira a internet.');
   } finally {
     clearTimeout(timer);
   }
@@ -121,5 +129,14 @@ export async function aiChat(
       throw new AiError(error instanceof OllamaError ? error.message : 'O Ollama não respondeu.');
     }
   }
-  return cloudChat(messages, options);
+  try {
+    return await cloudChat(messages, options);
+  } catch (error) {
+    if (!engine.backup) throw error;
+    try {
+      return await ollamaChat(engine.backup, messages, options);
+    } catch {
+      throw error; // a mensagem que vale é a da nuvem
+    }
+  }
 }
