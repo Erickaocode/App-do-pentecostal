@@ -81,7 +81,8 @@ export default {
     if (messages.length === 0) return reply(400, { error: 'Pedido sem mensagens.' }, cors);
     if (size > MAX_INPUT_CHARS) return reply(413, { error: 'Texto grande demais para a IA.' }, cors);
 
-    // Modelo principal e reservas: se um estiver sobrecarregado (503) ou sumir (404), tenta o próximo.
+    // Modelo principal e reservas: se a cota de um acabar (429), ele estiver sobrecarregado (503)
+    // ou sumir (404), tenta o próximo. No Gemini cada modelo tem a sua própria cota gratuita.
     const models = [env.AI_MODEL, ...String(env.AI_FALLBACK_MODELS || '').split(',')]
       .map((m) => m && m.trim())
       .filter(Boolean);
@@ -106,18 +107,18 @@ export default {
           ...(input.json ? { response_format: { type: 'json_object' } } : {}),
         }),
       }).catch(() => null);
-      if (upstream && ![404, 500, 503].includes(upstream.status)) break;
+      if (upstream && ![404, 429, 500, 503].includes(upstream.status)) break;
     }
 
-    if (!upstream) return reply(502, { error: 'A IA está fora do ar agora.' }, cors);
+    if (!upstream) return reply(502, { error: 'O EKS AI está fora do ar agora.' }, cors);
     if (upstream.status === 429) {
-      return reply(429, { error: 'A IA gratuita atingiu o limite por agora. Tente mais tarde.' }, cors);
+      return reply(429, { error: 'O EKS AI atingiu o limite gratuito por agora. Tente mais tarde.' }, cors);
     }
-    if (!upstream.ok) return reply(502, { error: `A IA respondeu com erro (${upstream.status}).` }, cors);
+    if (!upstream.ok) return reply(502, { error: `O EKS AI respondeu com erro (${upstream.status}).` }, cors);
 
     const data = await upstream.json().catch(() => null);
     const content = data?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string') return reply(502, { error: 'Resposta inesperada da IA.' }, cors);
+    if (typeof content !== 'string') return reply(502, { error: 'Resposta inesperada do EKS AI.' }, cors);
     return reply(200, { content }, cors);
   },
 };
