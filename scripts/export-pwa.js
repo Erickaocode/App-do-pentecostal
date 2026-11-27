@@ -35,14 +35,13 @@ precache.unshift('./');
 const indexPath = path.join(OUT_DIR, 'index.html');
 let indexHtml = fs.readFileSync(indexPath, 'utf8');
 
-// A versão muda sempre que algum arquivo muda (os nomes trazem o conteúdo, e a página
-// entra inteira), e isso faz o iPhone baixar o app novo.
-const version = crypto
-  .createHash('sha256')
-  .update(precache.join('\n'))
-  .update(indexHtml)
-  .digest('hex')
-  .slice(0, 12);
+// A versão muda sempre que algum arquivo muda (inclusive os ícones, que não têm o conteúdo
+// no nome), e isso faz o iPhone baixar o app novo.
+const hash = crypto.createHash('sha256').update(precache.join('\n')).update(indexHtml);
+for (const file of precache.filter((f) => f !== './')) {
+  hash.update(fs.readFileSync(path.join(OUT_DIR, file)));
+}
+const version = hash.digest('hex').slice(0, 12);
 
 const template = fs.readFileSync(path.join(__dirname, 'pwa-sw.js'), 'utf8');
 fs.writeFileSync(
