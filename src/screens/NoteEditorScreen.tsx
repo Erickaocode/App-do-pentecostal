@@ -97,6 +97,13 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   // fica, senão o campo some e leva o teclado junto.
   const [sheetTyping, setSheetTyping] = useState(false);
   const noteKeyboard = keyboardVisible && !sheetTyping;
+  // Digitando na gaveta: ela ocupa a tela toda, senão o teclado cobre o campo.
+  const sheetExpanded = keyboardVisible && sheetTyping;
+  // Só para quando o teclado fecha ou a pessoa volta para o título/anotação. Desligar no
+  // blur fazia a gaveta piscar no meio da animação do teclado.
+  useEffect(() => {
+    if (!keyboardVisible || editorFocused) setSheetTyping(false);
+  }, [keyboardVisible, editorFocused]);
   const [selectedText, setSelectedText] = useState('');
   const [formats, setFormats] = useState<EditorFormats | null>(null);
   const [suggestSignal, setSuggestSignal] = useState(0);
@@ -405,7 +412,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   return (
     <View ref={containerRef} style={[styles.container, { paddingBottom: keyboardInset }]}>
       <SermonTimerPanel />
-      <View style={styles.header}>
+      <View style={[styles.header, sheetExpanded && styles.gone]}>
         {verseRef ? (
           <View style={styles.verseBanner}>
             <Text style={styles.verseBannerRef}>
@@ -425,10 +432,11 @@ export function NoteEditorScreen({ route, navigation }: Props) {
           onChangeText={setTitle}
           returnKeyType="next"
           onSubmitEditing={() => editorRef.current?.run('focus', null)}
+          onFocus={() => setSheetTyping(false)}
         />
       </View>
 
-      <View style={styles.editorBox}>
+      <View style={[styles.editorBox, sheetExpanded && styles.gone]}>
         <RichNoteEditor
           ref={editorRef}
           docKey={loaded ? 'ready' : 'loading'}
@@ -455,6 +463,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         activeTab={assistantTab}
         onTabChange={setAssistantTab}
         hidden={editorFocused || noteKeyboard || formatPanelOpen}
+        expanded={sheetExpanded}
         scrollSignal={suggestSignal}
         status={
           saveStatus === 'saving'
@@ -555,6 +564,7 @@ function createStyles(colors: ThemeColors) {
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: 20 },
     header: { paddingHorizontal: 16, paddingTop: 12 },
     editorBox: { flex: 1, minHeight: 160 },
+    gone: { display: 'none' },
     verseBanner: {
       backgroundColor: colors.surface,
       borderLeftWidth: 4,
