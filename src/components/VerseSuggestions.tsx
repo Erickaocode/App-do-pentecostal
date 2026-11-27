@@ -95,7 +95,7 @@ export function VerseSuggestions({
           }
         } catch (error) {
           if (current === request.current) {
-            setAiNote((error as Error).message || 'A IA não respondeu agora.');
+            setAiNote((error as Error).message || 'O EKS AI não respondeu agora.');
           }
         }
         return;
