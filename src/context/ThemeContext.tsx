@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { useUserDb } from '../db/UserDbProvider';
 import { getSetting, setSetting } from '../db/userQueries';
 import { darkColors, lightColors, ThemeColors } from '../theme';
@@ -39,6 +40,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setScheme(next);
     setSetting(db, SETTING_KEY, next).catch(() => {});
   }, [db]);
+
+  // Na web (iPhone), o fundo da página aparece em qualquer vão quando o teclado abre:
+  // ele precisa ter a cor do tema, senão vira uma faixa clara no modo escuro.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const background = (scheme === 'dark' ? darkColors : lightColors).background;
+    document.documentElement.style.backgroundColor = background;
+    document.body.style.backgroundColor = background;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
+  }, [scheme]);
 
   // Objeto estável: as telas só redesenham quando o tema realmente muda.
   const value = useMemo<ThemeContextValue>(
