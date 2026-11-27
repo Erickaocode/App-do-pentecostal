@@ -6,10 +6,10 @@
 //   sem conexão, usa a cópia guardada.
 // - Os outros arquivos têm o conteúdo no nome (index-abc123.js), então a cópia
 //   guardada nunca fica velha.
-const VERSION = '924aa63dcc83';
+const VERSION = '0964512c0d10';
 const PRECACHE = [
   "./",
-  "_expo/static/js/web/index-ead9b3a0b896101c22c8fc11d9e560dd.js",
+  "_expo/static/js/web/index-5f3eb79409b4ce20f391cf7ecc6827b7.js",
   "_expo/static/js/web/worker-399becc843e90771307f8e194b71b3cf.js",
   "apple-touch-icon.png",
   "assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
