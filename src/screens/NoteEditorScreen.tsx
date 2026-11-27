@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -109,6 +110,12 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [suggestSignal, setSuggestSignal] = useState(0);
   // Assistente começa recolhido: a tela fica livre para escrever.
   const [assistantOpen, setAssistantOpen] = useState(false);
+  // No celular a gaveta aberta ocupa a tela toda e não some com o teclado: espremida, o
+  // teclado cobria os campos dela. No tablet sobra espaço e ela divide a tela com a anotação.
+  const { width, height } = useWindowDimensions();
+  const isPhone = Math.min(width, height) < 600;
+  const phoneSheet = isPhone && assistantOpen;
+  const sheetFullScreen = phoneSheet || sheetExpanded;
   const [assistantTab, setAssistantTab] = useState('verses');
   const [ollama, setOllama] = useState<OllamaConfig | null>(null);
   const [aiMode, setAiMode] = useState<AiMode>('off');
@@ -412,7 +419,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   return (
     <View ref={containerRef} style={[styles.container, { paddingBottom: keyboardInset }]}>
       <SermonTimerPanel />
-      <View style={[styles.header, sheetExpanded && styles.gone]}>
+      <View style={[styles.header, sheetFullScreen && styles.gone]}>
         {verseRef ? (
           <View style={styles.verseBanner}>
             <Text style={styles.verseBannerRef}>
@@ -436,7 +443,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         />
       </View>
 
-      <View style={[styles.editorBox, sheetExpanded && styles.gone]}>
+      <View style={[styles.editorBox, sheetFullScreen && styles.gone]}>
         <RichNoteEditor
           ref={editorRef}
           docKey={loaded ? 'ready' : 'loading'}
@@ -462,8 +469,8 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         onOpenChange={setAssistantOpen}
         activeTab={assistantTab}
         onTabChange={setAssistantTab}
-        hidden={editorFocused || noteKeyboard || formatPanelOpen}
-        expanded={sheetExpanded}
+        hidden={!phoneSheet && (editorFocused || noteKeyboard || formatPanelOpen)}
+        expanded={sheetFullScreen}
         scrollSignal={suggestSignal}
         status={
           saveStatus === 'saving'
@@ -541,12 +548,15 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         ]}
       />
 
-      <NoteFormatToolbar
-        formats={formats}
-        editorFocused={editorFocused || noteKeyboard}
-        onCommand={handleCommand}
-        onPanelChange={setFormatPanelOpen}
-      />
+      {/* Com a gaveta em tela cheia no celular, a barra de formatação só ocupa espaço. */}
+      <View style={phoneSheet && styles.gone}>
+        <NoteFormatToolbar
+          formats={formats}
+          editorFocused={!phoneSheet && (editorFocused || noteKeyboard)}
+          onCommand={handleCommand}
+          onPanelChange={setFormatPanelOpen}
+        />
+      </View>
 
       <HolyricsSheet
         visible={holyricsOpen}
