@@ -18,10 +18,12 @@ import type { ThemeColors } from '../theme';
 interface Props {
   config: OllamaConfig | null;
   onChange: (config: OllamaConfig | null) => void;
+  /** Avisa quando o campo de endereço está com o teclado aberto. */
+  onTypingChange?: (typing: boolean) => void;
 }
 
 /** Liga o app ao Ollama: endereço, teste de conexão e escolha do modelo. */
-export function OllamaSettings({ config, onChange }: Props) {
+export function OllamaSettings({ config, onChange, onTypingChange }: Props) {
   const db = useUserDb();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -103,6 +105,8 @@ export function OllamaSettings({ config, onChange }: Props) {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="url"
+        onFocus={() => onTypingChange?.(true)}
+        onBlur={() => onTypingChange?.(false)}
       />
       {warnHttps ? (
         <Text style={styles.warn}>

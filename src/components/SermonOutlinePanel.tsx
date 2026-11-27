@@ -21,6 +21,8 @@ interface Props {
   styleEnabled: boolean;
   onStyleChange: (enabled: boolean) => void;
   loadStyleSamples: () => Promise<string>;
+  /** Avisa quando um campo do painel está com o teclado aberto. */
+  onTypingChange?: (typing: boolean) => void;
 }
 
 /** "Me dá um esboço": a pessoa escreve o tema e recebe a pregação estruturada com versículos. */
@@ -34,6 +36,7 @@ export function SermonOutlinePanel({
   styleEnabled,
   onStyleChange,
   loadStyleSamples,
+  onTypingChange,
 }: Props) {
   const db = useBibleDb();
   const { colors } = useTheme();
@@ -104,6 +107,8 @@ export function SermonOutlinePanel({
         placeholderTextColor={colors.textSecondary}
         returnKeyType="done"
         onSubmitEditing={handleGenerate}
+        onFocus={() => onTypingChange?.(true)}
+        onBlur={() => onTypingChange?.(false)}
       />
       <Text style={styles.label}>Texto base (opcional)</Text>
       <TextInput
@@ -114,6 +119,8 @@ export function SermonOutlinePanel({
         placeholderTextColor={colors.textSecondary}
         returnKeyType="done"
         onSubmitEditing={handleGenerate}
+        onFocus={() => onTypingChange?.(true)}
+        onBlur={() => onTypingChange?.(false)}
       />
 
       {engine ? (

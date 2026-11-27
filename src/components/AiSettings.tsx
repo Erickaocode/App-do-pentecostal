@@ -10,6 +10,7 @@ interface Props {
   onModeChange: (mode: AiMode) => void;
   ollama: OllamaConfig | null;
   onOllamaChange: (config: OllamaConfig | null) => void;
+  onTypingChange?: (typing: boolean) => void;
 }
 
 /** Cores da marca EKS AI (iguais às do assistente de desktop), em qualquer tema do app. */
@@ -70,7 +71,7 @@ function EksMark({ size = 34 }: { size?: number }) {
 }
 
 /** Painel do EKS AI: status ao vivo, o que ele faz e onde ele roda (nuvem, PC ou desligado). */
-export function AiSettings({ mode, onModeChange, ollama, onOllamaChange }: Props) {
+export function AiSettings({ mode, onModeChange, ollama, onOllamaChange, onTypingChange }: Props) {
   const [health, setHealth] = useState<{ checking: boolean; model: string | null }>({
     checking: true,
     model: null,
@@ -154,7 +155,7 @@ export function AiSettings({ mode, onModeChange, ollama, onOllamaChange }: Props
         <Text style={styles.modeText}>{MODE_TEXT[mode]}</Text>
       </View>
 
-      {mode === 'ollama' ? <OllamaSettings config={ollama} onChange={onOllamaChange} /> : null}
+      {mode === 'ollama' ? <OllamaSettings config={ollama} onChange={onOllamaChange} onTypingChange={onTypingChange} /> : null}
     </View>
   );
 }
