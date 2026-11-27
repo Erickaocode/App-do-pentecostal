@@ -5,6 +5,7 @@ import { engineLabel, type AiEngine } from '../ai/engine';
 import { generateOutline, outlineToHtml, verseLabel, type SermonOutline } from '../ai/outline';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
+import { revealFocusedInput } from '../hooks/useKeyboardInset';
 import type { ThemeColors } from '../theme';
 
 interface Props {
@@ -107,8 +108,10 @@ export function SermonOutlinePanel({
         placeholderTextColor={colors.textSecondary}
         returnKeyType="done"
         onSubmitEditing={handleGenerate}
-        onFocus={() => onTypingChange?.(true)}
-        onBlur={() => onTypingChange?.(false)}
+        onFocus={() => {
+          onTypingChange?.(true);
+          revealFocusedInput();
+        }}
       />
       <Text style={styles.label}>Texto base (opcional)</Text>
       <TextInput
@@ -119,8 +122,10 @@ export function SermonOutlinePanel({
         placeholderTextColor={colors.textSecondary}
         returnKeyType="done"
         onSubmitEditing={handleGenerate}
-        onFocus={() => onTypingChange?.(true)}
-        onBlur={() => onTypingChange?.(false)}
+        onFocus={() => {
+          onTypingChange?.(true);
+          revealFocusedInput();
+        }}
       />
 
       {engine ? (

@@ -85,3 +85,15 @@ export function useKeyboardOpen(): boolean {
   }, []);
   return open;
 }
+
+/**
+ * Na web, rola até o campo que acabou de ganhar o foco depois que o teclado termina de
+ * subir: o iPhone não rola áreas internas (como a gaveta do assistente) sozinho.
+ */
+export function revealFocusedInput() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  setTimeout(() => {
+    const el = document.activeElement as HTMLElement | null;
+    el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  }, 350);
+}

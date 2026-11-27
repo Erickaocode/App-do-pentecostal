@@ -12,6 +12,7 @@ import {
   type OllamaConfig,
 } from '../ai/ollama';
 import { useTheme } from '../context/ThemeContext';
+import { revealFocusedInput } from '../hooks/useKeyboardInset';
 import { useUserDb } from '../db/UserDbProvider';
 import type { ThemeColors } from '../theme';
 
@@ -105,8 +106,10 @@ export function OllamaSettings({ config, onChange, onTypingChange }: Props) {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="url"
-        onFocus={() => onTypingChange?.(true)}
-        onBlur={() => onTypingChange?.(false)}
+        onFocus={() => {
+          onTypingChange?.(true);
+          revealFocusedInput();
+        }}
       />
       {warnHttps ? (
         <Text style={styles.warn}>
