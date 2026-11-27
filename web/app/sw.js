@@ -6,7 +6,7 @@
 //   sem conexão, usa a cópia guardada.
 // - Os outros arquivos têm o conteúdo no nome (index-abc123.js), então a cópia
 //   guardada nunca fica velha.
-const VERSION = 'f4f1e59cb766';
+const VERSION = '251fdb147664';
 const PRECACHE = [
   "./",
   "_expo/static/js/web/index-681380185885e2dd3ec1e96d0e6b73f1.js",
