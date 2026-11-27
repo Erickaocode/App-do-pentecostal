@@ -5,6 +5,7 @@ import { aiSuggestVerses } from '../ai/aiSuggest';
 import type { AiEngine } from '../ai/engine';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
+import { EksBadge } from './EksLogo';
 import type { VerseWithBook } from '../db/bibleQueries';
 import { suggestVerses, type SuggestionGroup } from '../suggest/suggestVerses';
 import type { ThemeColors } from '../theme';
@@ -173,7 +174,11 @@ export function VerseSuggestions({
       {visible.map((group) => (
         <View key={group.key} style={styles.group}>
           <View style={styles.groupHeader}>
-            <Ionicons name={GROUP_ICONS[group.kind]} size={14} color={colors.textSecondary} />
+            {group.kind === 'ai' ? (
+              <EksBadge size={14} />
+            ) : (
+              <Ionicons name={GROUP_ICONS[group.kind]} size={14} color={colors.textSecondary} />
+            )}
             <Text style={styles.groupTitle}>{group.title}</Text>
           </View>
           {group.items.map(({ verse, detail }) => (

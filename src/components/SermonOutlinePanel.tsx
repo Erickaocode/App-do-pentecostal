@@ -11,6 +11,7 @@ import {
 } from '../ai/outline';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
+import { EksBadge } from './EksLogo';
 import { revealFocusedInput } from '../hooks/useKeyboardInset';
 import type { ThemeColors } from '../theme';
 
@@ -93,11 +94,11 @@ export function SermonOutlinePanel({
   return (
     <View style={styles.container}>
       <Pressable onPress={onOpenSettings} style={styles.mode}>
-        <Ionicons
-          name={engine ? 'sparkles' : 'cloud-offline-outline'}
-          size={14}
-          color={engine ? colors.primary : colors.textSecondary}
-        />
+        {engine ? (
+          <EksBadge size={16} />
+        ) : (
+          <Ionicons name="cloud-offline-outline" size={14} color={colors.textSecondary} />
+        )}
         <Text style={[styles.modeText, !!engine && styles.modeTextOn]} numberOfLines={2}>
           {engine
             ? `IA ativa: ${engineLabel(engine)}`

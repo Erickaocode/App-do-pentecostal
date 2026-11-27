@@ -12,6 +12,7 @@ import {
   type ScrollView as ScrollViewType,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { EksBadge } from './EksLogo';
 import type { ThemeColors } from '../theme';
 
 export interface AssistantTab {
@@ -112,7 +113,7 @@ export function AssistantSheet({
         >
           <View style={styles.grabber} />
           <View style={styles.barRow}>
-            <Ionicons name="sparkles" size={15} color={colors.primary} />
+            <EksBadge size={17} />
             <Text style={styles.barText}>EKS AI</Text>
             <Text style={styles.barSub}>versículos · esboço</Text>
             <View style={styles.flex} />
