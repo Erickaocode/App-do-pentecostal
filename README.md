@@ -19,6 +19,7 @@
 [![SQLite](https://img.shields.io/badge/SQLite-offline-003B57?logo=sqlite&logoColor=white)](https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/)
 
 [Funcionalidades](#-funcionalidades) •
+[EKS AI](#-eks-ai-assistente-de-pregação) •
 [Privacidade](#-privacidade) •
 [Para desenvolvedores](#-para-desenvolvedores) •
 [Publicando versões](#-publicando-novas-versões)
@@ -31,7 +32,7 @@
 
 O **App do Pentecostal** é a sua Bíblia sempre por perto. Você pode ler, estudar e guardar o que marca a sua caminhada de fé, tudo num único app, simples e leve.
 
-Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você marca fica salvo no seu próprio aparelho.
+Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você marca fica salvo no seu próprio aparelho. Para quem prega, o app traz o **EKS AI**, um assistente que sugere versículos e monta esboços de pregação.
 
 <div align="center">
 <img src="web/assets/screenshots/devices.png" alt="App do Pentecostal aberto num notebook e num celular" width="760" />
@@ -46,22 +47,48 @@ Não tem cadastro nem anúncios, e funciona **100% offline**. Tudo o que você m
 | 🖍️ | **Grifos coloridos** | Destaque versículos em amarelo, verde, azul ou rosa |
 | ❤️ | **Favoritos** | Guarde os versículos preferidos para reler quando quiser |
 | 📝 | **Anotações** | Escreva reflexões ligadas a cada versículo, salvas automaticamente enquanto você digita, com formatação no estilo do bloco de notas do iPhone: negrito, itálico, Título, Cabeçalho, listas, lista de tarefas, citação, cores e tabelas |
-| 💡 | **Sugestões de versículos** | No editor de anotações, um toque sugere versículos ligados ao que você escreveu, agrupados por assunto (temas, personagens bíblicos e referências citadas no texto) |
+| 💡 | **Sugestões de versículos** | No editor de anotações, um toque sugere versículos ligados ao que você escreveu, agrupados por assunto (temas, personagens bíblicos e referências citadas no texto). Com o EKS AI ligado, ele entende o sentido do texto e explica por que cada versículo combina |
+| ✨ | **Esboço de pregação (EKS AI)** | Digite o tema e receba um esboço completo: estudo aprofundado do texto base, introdução, pontos com versículos, aplicação, conclusão com apelo e um auxílio para pregar. Um toque insere tudo na anotação |
 | ⏱️ | **Cronômetro de pregação** | Tempos prontos para saudação e pregação (5, 15, 30 min ou 1 hora), aviso no último minuto e tela sempre acesa; aparece também dentro das anotações |
 | 📺 | **Holyrics** | Conecte ao Holyrics do computador da igreja e projete os versículos da anotação ou um texto livre, com botões de voltar, avançar e fechar |
 | 🏠 | **Tela Início** | Saudação do dia, versículo em destaque, atalho para continuar a leitura de onde parou e frases bíblicas curtas animadas |
 | ☀️ | **Versículo do dia** | Um versículo de encorajamento novo a cada dia |
 | 🔥 | **Sequência de dias** | Acompanhe quantos dias seguidos você abriu a Palavra |
 | 🌙 | **Tema escuro** | Leitura confortável à noite, com um toque |
-| 📶 | **Funciona sem internet** | A Bíblia inteira vem dentro do app |
+| 📶 | **Funciona sem internet** | A Bíblia inteira vem dentro do app. Sem internet, as sugestões e o esboço funcionam no modo básico |
+
+## 🤖 EKS AI, assistente de pregação
+
+O assistente fica numa gaveta embaixo do editor de anotações, com três abas: **Versículos**, **Esboço** e **IA**. No celular, ela abre em tela cheia para o teclado não cobrir os campos. No tablet, ela divide a tela com a anotação.
+
+**O que vem num esboço:**
+
+1. **Texto base** com o versículo completo, tirado da Bíblia do app
+2. **Estudo do texto base**: contexto (quem escreveu, para quem, quando e por quê), palavras-chave no hebraico ou grego e a verdade central do texto
+3. **Introdução**, **3 pontos** com explicação e versículos de apoio, **aplicação** e **conclusão com apelo**
+4. **Auxílio para pregar**: uma ilustração, frases de impacto e dicas de condução (como começar, onde dar ênfase, tempo de cada parte, como fazer o apelo)
+
+Com **"Escrever no meu estilo"** ligado, o EKS AI lê trechos de até 3 anotações suas para escrever do seu jeito.
+
+**De onde vem a resposta:**
+
+| Modo | Como funciona |
+|---|---|
+| ☁️ **EKS AI na nuvem** (padrão) | Google Gemini, chamado por uma ponte própria. Se a cota gratuita de um modelo acabar, a ponte passa para o próximo modelo reserva |
+| 💻 **Ollama** | IA no seu computador, pela rede de casa ou da igreja. Se estiver configurado, também entra como reserva quando a nuvem não responde |
+| 📴 **Modo básico** | Sem internet e sem IA: monta o esboço com os temas e personagens que o app já conhece |
+
+> [!NOTE]
+> Os textos dos versículos sempre vêm da Bíblia do app, nunca da IA. Referências que não existem ficam de fora.
 
 ## 🔒 Privacidade
 
 - ❌ Não pede cadastro nem login
 - ❌ Não exibe anúncios
-- ❌ Não coleta nem compartilha nenhum dado pessoal
+- ❌ Não usa ferramentas de análise ou rastreamento
 - ✅ Favoritos, grifos e anotações ficam **apenas no seu aparelho**
 - ✅ A conexão com o Holyrics é opcional e acontece só pela rede local da igreja
+- ⚠️ O EKS AI na nuvem é opcional e pede o seu aceite antes do primeiro uso. Só quando você toca para sugerir versículos ou gerar um esboço, o título e o texto da anotação aberta são enviados ao Google Gemini. A ponte não grava o texto.
 
 Leia a [política de privacidade completa](https://erickaocode.github.io/App-do-pentecostal/web/privacidade/).
 
@@ -80,6 +107,7 @@ Leia a [política de privacidade completa](https://erickaocode.github.io/App-do-
 - **Electron**: versão para computador, que reaproveita o build web
 - **App web para iPhone (PWA)**: o mesmo build web, publicado no GitHub Pages com service worker para abrir sem internet
 - **EAS Build**: gera as builds de Android e iOS na nuvem
+- **Cloudflare Worker** (`ai-proxy/`): ponte do EKS AI, que guarda a chave do Gemini fora do app
 
 ### Estrutura do projeto
 
@@ -89,7 +117,9 @@ app/
 ├── app.config.js          # baseUrl configurável para o build web (WEB_BASE_URL)
 ├── src/
 │   ├── screens/           # Início, Livros, Leitura, Busca, Anotações, Editor de nota, Favoritos
-│   ├── components/        # Menu do versículo, seletor de versão, sugestões, cronômetro, Holyrics
+│   ├── components/        # Menu do versículo, gaveta do EKS AI, esboço, sugestões, cronômetro, Holyrics
+│   ├── ai/                # EKS AI: motor (nuvem/Ollama), sugestões e esboço de pregação
+│   ├── hooks/             # Teclado (inclusive no app web do iPhone)
 │   ├── bible/             # Lista de versões da Bíblia que vão junto com o app
 │   ├── context/           # Versão da Bíblia, tema claro/escuro e cronômetro de pregação
 │   ├── db/                # Conexão e consultas dos bancos da Bíblia e do usuário
@@ -98,13 +128,15 @@ app/
 │   ├── holyrics/          # Cliente do API Server do Holyrics
 │   ├── navigation/        # Abas, pilhas e tipos de rotas
 │   └── utils/             # Datas e avisos/confirmações que funcionam também na web
-├── assets/bible/          # blivre.db (texto bíblico)
+├── assets/               # Ícones do app (iPhone, Android, abertura) e bible/blivre.db
+├── ai-proxy/              # Ponte do EKS AI (Cloudflare Worker)
 ├── scripts/               # export-pwa.js e modelo do service worker do app web
 ├── web/
 │   ├── webapp/            # Build web do computador (usado pelo app desktop)
 │   ├── app/               # App web do iPhone (gerado por npm run export:pwa)
 │   ├── landing/           # Página de download
-│   ├── site/              # Site demonstrativo (sem downloads, com contato)
+│   ├── site/              # Site oficial com a logo e a abertura animada (sem downloads, com contato)
+│   ├── assets/            # Logo, ícone e prints usados nos sites
 │   └── privacidade/       # Política de privacidade
 ├── desktop/               # App Electron (Windows, macOS, Linux)
 └── store/                 # Textos e imagens da Play Store e da App Store
@@ -196,6 +228,11 @@ npm run export:pwa   # gera web/app com o subcaminho e o service worker
 
 Faça commit da pasta `web/app` atualizada. Sem esse passo, quem usa o iPhone continua na versão antiga.
 
+A versão do service worker é calculada pelo conteúdo de todos os arquivos, inclusive os ícones. Assim, qualquer mudança faz o iPhone baixar o app novo.
+
+> [!NOTE]
+> O ícone da tela de início do iPhone só muda quando a pessoa remove o atalho e adiciona de novo pelo Safari ("Adicionar à Tela de Início").
+
 </details>
 
 <details>
@@ -219,6 +256,21 @@ Faça commit da pasta `web/app` atualizada. Sem esse passo, quem usa o iPhone co
 </details>
 
 <details>
+<summary><b>🤖 Ponte do EKS AI</b></summary>
+
+A ponte fica em [`ai-proxy/`](ai-proxy/) e roda num Cloudflare Worker. O modelo principal e os reservas ficam em [`ai-proxy/wrangler.toml`](ai-proxy/wrangler.toml) (`AI_MODEL` e `AI_FALLBACK_MODELS`). A ponte tenta o próximo modelo quando um fica sem cota (429), sobrecarregado (500/503) ou some (404).
+
+```bash
+cd ai-proxy
+npx wrangler@4 deploy                 # publica a ponte
+npx wrangler@4 secret put AI_API_KEY  # troca a chave do Gemini
+```
+
+A chave nunca fica no código. Cada aparelho pode fazer até 8 pedidos por minuto.
+
+</details>
+
+<details>
 <summary><b>📥 Página de download</b></summary>
 
 Depois de criar a release no GitHub com os arquivos (APK, instalador do Windows e pacote do Linux), atualize os links da nova versão em [`web/landing/index.html`](web/landing/index.html). O site de apresentação ([`web/site`](web/site/index.html)) é só demonstrativo e não tem links de download. Atualize os links só depois que a release existir, para eles não ficarem quebrados.
@@ -232,6 +284,7 @@ Depois de criar a release no GitHub com os arquivos (APK, instalador do Windows 
 - Texto bíblico: **Bíblia Livre**
 - Ícones: [Ionicons](https://ionic.io/ionicons), via `@expo/vector-icons`
 - Integração de projeção: [Holyrics](https://holyrics.com.br) (API Server)
+- IA do EKS AI: [Google Gemini](https://ai.google.dev), com [Ollama](https://ollama.com) como opção local
 
 <div align="center">
 
