@@ -2,7 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { engineLabel, type AiEngine } from '../ai/engine';
-import { generateOutline, outlineToHtml, verseLabel, type SermonOutline } from '../ai/outline';
+import {
+  generateOutline,
+  outlineSignature,
+  outlineToHtml,
+  verseLabel,
+  type SermonOutline,
+} from '../ai/outline';
 import { useBibleDb } from '../context/BibleContext';
 import { useTheme } from '../context/ThemeContext';
 import { revealFocusedInput } from '../hooks/useKeyboardInset';
@@ -95,7 +101,7 @@ export function SermonOutlinePanel({
         <Text style={[styles.modeText, !!engine && styles.modeTextOn]} numberOfLines={2}>
           {engine
             ? `IA ativa: ${engineLabel(engine)}`
-            : 'Modo básico (sem IA). Toque para ligar a IA e ter esboços completos.'}
+            : 'Modo básico, sem internet. Toque para ligar o EKS AI e ter esboços completos.'}
         </Text>
       </Pressable>
 
@@ -164,7 +170,7 @@ export function SermonOutlinePanel({
           <Ionicons name={outline ? 'refresh' : 'sparkles'} size={17} color={colors.surface} />
         )}
         <Text style={styles.generateText}>
-          {loading ? (engine ? 'A IA está escrevendo...' : 'Montando...') : outline ? 'Gerar outro' : 'Gerar esboço'}
+          {loading ? (engine ? 'O EKS AI está escrevendo...' : 'Montando...') : outline ? 'Gerar outro' : 'Gerar esboço'}
         </Text>
       </Pressable>
       {loading && engine?.kind === 'ollama' ? (
@@ -181,6 +187,7 @@ export function SermonOutlinePanel({
               Texto base: {verseLabel(outline.baseVerse)} — “{outline.baseVerse.text}”
             </Text>
           ) : null}
+          <Section title="Estudo do texto base" text={outline.study} styles={styles} />
           <Section title="Introdução" text={outline.introduction} styles={styles} />
           {outline.points.map((point, i) => (
             <View key={i} style={styles.section}>
@@ -197,6 +204,32 @@ export function SermonOutlinePanel({
           ))}
           <Section title="Aplicação" text={outline.application} styles={styles} />
           <Section title="Conclusão" text={outline.conclusion} styles={styles} />
+          {outline.aid.illustration || outline.aid.phrases.length || outline.aid.tips.length ? (
+            <View style={[styles.section, styles.aid]}>
+              <Text style={styles.sectionTitle}>Auxílio para pregar</Text>
+              {outline.aid.illustration ? (
+                <Text style={styles.body}>
+                  <Text style={styles.aidLabel}>Ilustração: </Text>
+                  {outline.aid.illustration}
+                </Text>
+              ) : null}
+              {outline.aid.phrases.length ? (
+                <Text style={styles.aidLabel}>Frases de impacto</Text>
+              ) : null}
+              {outline.aid.phrases.map((phrase, i) => (
+                <Text key={`f${i}`} style={styles.body}>
+                  • {phrase}
+                </Text>
+              ))}
+              {outline.aid.tips.length ? <Text style={styles.aidLabel}>Dicas para pregar</Text> : null}
+              {outline.aid.tips.map((tip, i) => (
+                <Text key={`d${i}`} style={styles.body}>
+                  • {tip}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+          <Text style={styles.signature}>{outlineSignature(outline)}</Text>
 
           <Pressable
             style={({ pressed }) => [styles.insert, pressed && styles.pressed]}
@@ -213,8 +246,8 @@ export function SermonOutlinePanel({
           </Pressable>
           {outline.source === 'offline' ? (
             <Text style={styles.hint}>
-              Esboço básico: um ponto de partida. Com a IA ligada, ela escreve explicações
-              próprias para o seu tema.
+              Esboço básico: um ponto de partida. Com o EKS AI ligado, ele escreve o estudo e as
+              explicações próprias para o seu tema.
             </Text>
           ) : null}
         </View>
@@ -254,6 +287,14 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 8,
     },
     modeText: { flex: 1, fontSize: 12, color: colors.textSecondary },
+    aid: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      padding: 10,
+      gap: 4,
+    },
+    aidLabel: { fontSize: 13, fontWeight: '700', color: colors.primary, marginTop: 2 },
+    signature: { fontSize: 11, fontStyle: 'italic', color: colors.textSecondary, textAlign: 'right' },
     modeTextOn: { color: colors.primary, fontWeight: '700' },
     label: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginTop: 4 },
     // 16px: no iPhone, campos menores fazem a tela dar zoom ao tocar.
