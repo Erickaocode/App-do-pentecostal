@@ -92,9 +92,9 @@
 
   /* Chama: três línguas de fogo sobem de dentro da Bíblia. */
   .flame-rise { transform-origin: 100px 156px; transform: scale(.1, 0); opacity: 0; }
-  .flame-main { animation: rise .75s cubic-bezier(.34, 1.4, .64, 1) .8s forwards; }
-  .flame-inner { animation: rise .65s cubic-bezier(.34, 1.4, .64, 1) .98s forwards; }
-  .flame-right { animation: rise .6s cubic-bezier(.34, 1.4, .64, 1) 1.08s forwards; }
+  .flame-left, .flame-right { animation: rise .6s cubic-bezier(.34, 1.4, .64, 1) .8s forwards; }
+  .flame-main { animation: rise .75s cubic-bezier(.34, 1.4, .64, 1) .9s forwards; }
+  .flame-inner { animation: rise .65s cubic-bezier(.34, 1.4, .64, 1) 1.05s forwards; }
   .flame-flicker { transform-origin: 100px 156px; animation: flicker 2.2s ease-in-out 1.7s infinite; }
   .flame-swirl { fill: none; stroke: #FDF3E6; stroke-width: 4.5; stroke-linecap: round;
     stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s ease 1.25s forwards; }
@@ -426,21 +426,24 @@
           </linearGradient>
         </defs>
 
-        <!-- Chama (atrás da Bíblia, nasce dela) -->
+        <!-- Chama (atrás da Bíblia, nasce dela), alinhada no centro (x = 100) -->
         <g class="flame-flicker">
-          <g class="flame-rise flame-main">
-            <path fill="url(#flameMain)" d="M100 152C64 150 42 126 44 98c2-26 22-40 34-56 8-11 12-22 10-34 22 14 32 34 30 54 12-6 18-16 18-28 18 20 26 48 20 74-6 26-28 42-56 44z"/>
-          </g>
-          <g class="flame-rise flame-inner">
-            <path fill="url(#flameSide)" d="M104 150c-16-14-18-34-6-50 10-14 18-26 16-44 18 18 28 42 24 64-4 18-16 28-34 30z"/>
-            <path class="flame-swirl" pathLength="1" d="M102 150c-16-14-18-34-6-50 10-14 18-26 16-44"/>
+          <g class="flame-rise flame-left">
+            <path fill="url(#flameSide)" d="M64 146C44 136 36 114 42 92c4 14 12 24 24 28z"/>
           </g>
           <g class="flame-rise flame-right">
-            <path fill="url(#flameSide)" opacity=".85" d="M138 148c18-10 26-28 22-50-4 10-10 16-18 18 2 12 0 22-4 32z"/>
+            <path fill="url(#flameSide)" d="M136 146c20-10 28-32 22-54-4 14-12 24-24 28z"/>
+          </g>
+          <g class="flame-rise flame-main">
+            <path fill="url(#flameMain)" d="M100 152C68 152 48 132 48 104c0-26 18-42 32-58 10-12 18-22 20-36 2 14 10 24 20 36 14 16 32 32 32 58 0 28-20 48-52 48z"/>
+          </g>
+          <g class="flame-rise flame-inner">
+            <path fill="url(#flameSide)" d="M100 150c-18 0-30-14-30-32 0-16 12-26 20-38 6-9 10-18 10-30 0 12 4 21 10 30 8 12 20 22 20 38 0 18-12 32-30 32z"/>
+            <path class="flame-swirl" pathLength="1" d="M100 50c0 12-4 21-10 30-8 12-20 22-20 38 0 14 8 26 20 30"/>
           </g>
           <g class="cross-glow">
-            <path class="cross-part cross-v" pathLength="1" d="M118 94v52"/>
-            <path class="cross-part cross-h" pathLength="1" d="M107 109h22"/>
+            <path class="cross-part cross-v" pathLength="1" d="M100 94v54"/>
+            <path class="cross-part cross-h" pathLength="1" d="M88 110h24"/>
           </g>
         </g>
 
