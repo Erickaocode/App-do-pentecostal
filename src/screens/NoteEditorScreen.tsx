@@ -93,6 +93,10 @@ export function NoteEditorScreen({ route, navigation }: Props) {
   const [holyricsOpen, setHolyricsOpen] = useState(false);
   const [editorFocused, setEditorFocused] = useState(false);
   const [formatPanelOpen, setFormatPanelOpen] = useState(false);
+  // Teclado aberto por um campo da própria gaveta (esboço, endereço do Ollama): aí a gaveta
+  // fica, senão o campo some e leva o teclado junto.
+  const [sheetTyping, setSheetTyping] = useState(false);
+  const noteKeyboard = keyboardVisible && !sheetTyping;
   const [selectedText, setSelectedText] = useState('');
   const [formats, setFormats] = useState<EditorFormats | null>(null);
   const [suggestSignal, setSuggestSignal] = useState(0);
@@ -450,7 +454,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
         onOpenChange={setAssistantOpen}
         activeTab={assistantTab}
         onTabChange={setAssistantTab}
-        hidden={editorFocused || keyboardVisible || formatPanelOpen}
+        hidden={editorFocused || noteKeyboard || formatPanelOpen}
         scrollSignal={suggestSignal}
         status={
           saveStatus === 'saving'
@@ -507,6 +511,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
                 loadStyleSamples={loadStyleSamples}
                 onInsertHtml={handleInsertHtml}
                 onOpenSettings={() => setAssistantTab('ai')}
+                onTypingChange={setSheetTyping}
               />
             ),
           },
@@ -520,6 +525,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
                 onModeChange={handleAiModeChange}
                 ollama={ollama}
                 onOllamaChange={handleOllamaChange}
+                onTypingChange={setSheetTyping}
               />
             ),
           },
@@ -528,7 +534,7 @@ export function NoteEditorScreen({ route, navigation }: Props) {
 
       <NoteFormatToolbar
         formats={formats}
-        editorFocused={editorFocused || keyboardVisible}
+        editorFocused={editorFocused || noteKeyboard}
         onCommand={handleCommand}
         onPanelChange={setFormatPanelOpen}
       />
